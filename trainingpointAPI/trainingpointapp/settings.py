@@ -48,7 +48,9 @@ INSTALLED_APPS = [
     'trainingpoint.apps.TrainingpointConfig',
     'ckeditor',
     'ckeditor_uploader',
-    'rest_framework'
+    'rest_framework',
+    'drf_yasg',
+    'oauth2_provider',
 ]
 
 
