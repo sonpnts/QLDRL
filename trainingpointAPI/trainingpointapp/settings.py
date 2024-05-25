@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import pymysql
 
-
 pymysql.install_as_MySQLdb()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,11 +32,10 @@ ALLOWED_HOSTS = ['*']
 import cloudinary
 
 cloudinary.config(
-  cloud_name = "sonpnts",
-  api_key = "752187729553174",
-  api_secret = "LPw7aj9WseIgRmVct7bdppxfa5g"
+    cloud_name="sonpnts",
+    api_key="752187729553174",
+    api_secret="LPw7aj9WseIgRmVct7bdppxfa5g"
 )
-
 
 # Application definition
 
@@ -50,14 +48,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'trainingpoint.apps.TrainingpointConfig',
     'ckeditor',
-    'ckeditor_uploader'
+    'ckeditor_uploader',
+    'rest_framework',
 ]
-
 
 CKEDITOR_UPLOAD_PATH = "ckeditors/images"
 
 AUTH_USER_MODEL = 'trainingpoint.TaiKhoan'
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -82,6 +79,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
             ],
         },
     },
@@ -89,22 +87,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'trainingpointapp.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-   'default': {
-       'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'trainingpointdb',
-       'USER': 'root',
-       # 'PASSWORD': 'Nhatcuong123@',  #mk mysql
-       'PASSWORD': 'Son1010@',  #mk mysql
-       'HOST': ''  # mặc định localhost
-   }
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'trainingpointdb',
+        'USER': 'root',
+        # 'PASSWORD': 'Nhatcuong123@',  #mk mysql
+        'PASSWORD': 'Son1010@',  # mk mysql
+        'HOST': ''  # mặc định localhost
+    }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -124,7 +119,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -136,7 +130,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
@@ -146,7 +139,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
