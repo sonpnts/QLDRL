@@ -33,9 +33,9 @@ ALLOWED_HOSTS = ['*']
 import cloudinary
 
 cloudinary.config(
-    cloud_name="dpizftz60",
-    api_key="863397263737332",
-    api_secret="KMyyLVw-qbQ950g_UmtGOR655XE"
+  cloud_name = "sonpnts",
+  api_key = "752187729553174",
+  api_secret = "LPw7aj9WseIgRmVct7bdppxfa5g"
 )
 
 
@@ -96,9 +96,10 @@ WSGI_APPLICATION = 'trainingpointapp.wsgi.application'
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'trainingpointdbv1',
+       'NAME': 'trainingpointdb',
        'USER': 'root',
-       'PASSWORD': 'Nhatcuong123@',  #mk mysql
+       # 'PASSWORD': 'Nhatcuong123@',  #mk mysql
+       'PASSWORD': 'Son1010@',  #mk mysql
        'HOST': ''  # mặc định localhost
    }
 }
@@ -145,3 +146,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'phamngoctruongson2003@gmail.com'  # Thay bằng email của bạn
+EMAIL_HOST_PASSWORD = 'twefshdqocjlrxkh'  # Thay bằng mật khẩu của bạn
