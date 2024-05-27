@@ -4,6 +4,8 @@ from trainingpoint.models import *
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 
+
+
 class TaiKhoanAdmin(admin.ModelAdmin):
     readonly_fields = ['my_avatar']
 
@@ -28,3 +30,5 @@ admin.site.register(BaiViet)
 admin.site.register(Comment)
 admin.site.register(Like)
 admin.site.register(DiemRenLuyen)
+
+

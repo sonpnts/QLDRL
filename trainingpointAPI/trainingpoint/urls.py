@@ -6,9 +6,10 @@ from trainingpoint import send_mail
 
 r = routers.DefaultRouter()
 
-r.register('sinhviens', views.SinhVienViewSet, basename='sinhviens')
-r.register('lops', views.LopViewSet, basename='lops')
 r.register('khoas', views.KhoaViewSet, basename='khoas')
+r.register('lops', views.LopViewSet, basename='lops')
+r.register('taikhoans', views.TaiKhoanViewSet, basename='taikhoans')
+r.register('sinhviens', views.SinhVienViewSet, basename='sinhviens')
 r.register('dieus', views.DieuViewSet, basename='dieus')
 r.register('hoatdongs', views.HoatDongNgoaiKhoaViewSet, basename='hoatdongs')
 r.register('baiviets', views.BaiVietViewSet, basename="baiviets")
@@ -17,7 +18,7 @@ r.register('comments', views.CommentViewset, basename="comments")
 r.register('diemrenluyens', views.DiemRenLuyenViewset, basename='diemrenluyens')
 r.register('thamgias', views.ThamGiaViewSet, basename='thamgias')
 r.register('minhchungs', views.MinhChungViewSet, basename='minhchungs')
-
+r.register('send_mail', send_mail.SendEmailViewSet, basename='send_mail')
 urlpatterns = [
     path('', include(r.urls))
 ]

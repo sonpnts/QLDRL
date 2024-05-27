@@ -26,8 +26,8 @@ schema_view = get_schema_view(
         title="Training point API",
         default_version='v1',
         description="APIs for Training point app",
-        contact=openapi.Contact(email="hehehe"),
-        license=openapi.License(name="hehehehe"),
+        contact=openapi.Contact(email=""),
+        license=openapi.License(name=""),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
@@ -35,6 +35,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('', include('trainingpoint.urls')),
+
     path('admin/', admin.site.urls),
     re_path(r'^ckeditor/', include('ckeditor_uploader.urls')),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$',

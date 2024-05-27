@@ -5,7 +5,7 @@ from cloudinary.models import CloudinaryField
 
 
 class TaiKhoan(AbstractUser):
-    avatar = CloudinaryField('avatar', null=True)
+    avatar = CloudinaryField(null=True)
 
     class Roles(models.IntegerChoices):
         ADMIN = 1, 'Admin'
@@ -53,7 +53,7 @@ class TroLySinhVien_Khoa(BaseModel):
     khoa = models.ForeignKey(Khoa, on_delete=models.CASCADE)
 
 
-class SinhVien(BaseModel):
+class SinhVien(models.Model):
     mssv = models.CharField(max_length=10, unique=True)
     ho_ten = models.CharField(max_length=255)
     ngay_sinh = models.DateField()
