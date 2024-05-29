@@ -2,6 +2,7 @@ from rest_framework import serializers
 from trainingpoint.models import *
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 
 from .models import TaiKhoan, SinhVien, Lop
 from django.core.files.base import ContentFile
@@ -38,19 +39,21 @@ class TaiKhoanSerializer(serializers.ModelSerializer):
                 'write_only': True
             }
         }
+
+
     def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep['avatar'] = instance.avatar.url if instance.avatar else None
-        print(instance)
-        print(rep)
-        return rep
+        req = super().to_representation(instance)
+        req['avatar'] = instance.avatar.url
+        return req
 
     def create(self, validated_data):
-        avatar_url = validated_data.pop('avatar')  # Lấy URL của avatar từ validated_data
-        taiKhoan = TaiKhoan.objects.create(**validated_data)
-        taiKhoan.set_password(validated_data['password'])
-        taiKhoan.avatar = avatar_url  # Gán URL của avatar cho trường avatar
+        data=validated_data.copy();
+        taiKhoan = TaiKhoan(**data)
+        taiKhoan.set_password(taiKhoan.password)
+
         taiKhoan.save()
+
+
         return taiKhoan
 
 
@@ -64,10 +67,7 @@ class ItemSerializer(serializers.ModelSerializer):  # Minh chứng, tài khoản
         return rep
 
 
-class SinhVienSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SinhVien
-        fields = '__all__'
+
 
 
 class HockyNamhocSerializer(serializers.ModelSerializer):
@@ -79,7 +79,7 @@ class HockyNamhocSerializer(serializers.ModelSerializer):
 class DieuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dieu
-        fields = '__all__'
+        fields = ['ma_dieu','ten_dieu']
 
 
 class HoatDongNgoaiKhoaSerializer(serializers.ModelSerializer):
@@ -147,42 +147,6 @@ class DiemRenLuyenSerializer(serializers.ModelSerializer):
         model = DiemRenLuyen
         fields = '__all__'
 
-
-# class TaiKhoanSerializer(serializers.ModelSerializer):
-#
-#     def to_representation(self, instance):
-#         req = super().to_representation(instance)
-#         req['avatar'] = instance.avatar.url if instance.avatar else None
-#         return req
-#
-#     def create(self, validated_data):
-#         data = validated_data.copy()
-#
-#         # Nếu có 'uid', đặt password thành "" và role thành 4
-#         if 'uid' in data:
-#             data['password'] = "123"
-#             data['role'] = 4
-#
-#         # Tạo đối tượng TaiKhoan
-#         taikhoan = TaiKhoan(**data)
-#
-#         # Nếu 'password' không phải là "", set_password
-#         if data.get('password') not in ["", None]:
-#             taikhoan.set_password(data['password'])
-#
-#         # Lưu đối tượng TaiKhoan
-#         taikhoan.save()
-#
-#         return taikhoan
-#
-#     class Meta:
-#         model = TaiKhoan
-#         fields = ['id', 'email', 'username', 'avatar', 'role', 'uid']
-#         extra_kwargs = {
-#             'password': {
-#                 'write_only': True
-#             }
-#         }
 
 
 class SinhVienSerializer(serializers.ModelSerializer):

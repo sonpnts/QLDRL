@@ -101,7 +101,7 @@ class DieuViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
                 return [permissions.IsAuthenticated()]
             else:
                 if (self.request.user.is_authenticated and
-                        (self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien,
+                        (self.request.user.role in [TaiKhoan.Roles.ADMIN,
                                                     TaiKhoan.Roles.TroLySinhVien])):
                     return [permissions.IsAuthenticated()]
                 else:
@@ -390,31 +390,30 @@ class MinhChungViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Up
 class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = TaiKhoan.objects.filter(is_active=True).all()
     serializer_class = serializers.TaiKhoanSerializer
-    parser_classes = [parsers.MultiPartParser,  parsers.JSONParser]
+    parser_classes = [parsers.MultiPartParser]
 
-    # def get_permissions(self):
-    #     if self.action in ['taikhoan_is_valid']:
-    #         return [permissions.AllowAny()]
-    #     if self.action in ['get_current_user']:
-    #         return [permissions.IsAuthenticated()]
-    #     elif self.action == "create":
-    #         if isinstance(self.request.user, AnonymousUser):
-    #             if self.request.data and (self.request.data.get('role') == str(TaiKhoan.RoleChoices.SinhVien)):
-    #                 print("hello")
-    #                 return [permissions.AllowAny()]
-    #             else:
-    #                 return [permissions.IsAuthenticated()]
-    #         elif self.request.data and self.request.data.get('role') == str(TaiKhoan.RoleChoices.TroLySinhVien):
-    #             if self.request.user.role in [TaiKhoan.RoleChoices.CVCTSV.value, TaiKhoan.RoleChoices.ADMIN.value]:
-    #                 return [permissions.IsAuthenticated()]
-    #             else:
-    #                 raise exceptions.PermissionDenied()
-    #         elif self.request.data and self.request.data.get('role') in [str(TaiKhoan.RoleChoices.CVCTSV),
-    #                                                                      str(TaiKhoan.RoleChoices.ADMIN)]:
-    #             if self.request.user.role == TaiKhoan.RoleChoices.ADMIN.value:
-    #                 return [permissions.IsAuthenticated()]
-    #             else:
-    #                 raise exceptions.PermissionDenied()
+    def get_permissions(self):
+        if self.action in ['taikhoan_is_valid']:
+            return [permissions.AllowAny()]
+        if self.action in ['get_current_user']:
+            return [permissions.IsAuthenticated()]
+        elif self.action == "create":
+            if isinstance(self.request.user, AnonymousUser):
+                if self.request.data and (self.request.data.get('role') == str(TaiKhoan.Roles.SinhVien)):
+                    return [permissions.AllowAny()]
+                else:
+                    return [permissions.IsAuthenticated()]
+            elif self.request.data and self.request.data.get('role') == str(TaiKhoan.Roles.TroLySinhVien):
+                if self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value, TaiKhoan.Roles.ADMIN.value]:
+                    return [permissions.IsAuthenticated()]
+                else:
+                    raise exceptions.PermissionDenied()
+            elif self.request.data and self.request.data.get('role') in [str(TaiKhoan.Roles.CongTacSinhVien),
+                                                                         str(TaiKhoan.Roles.ADMIN)]:
+                if self.request.user.role == TaiKhoan.Roles.ADMIN.value:
+                    return [permissions.IsAuthenticated()]
+                else:
+                    raise exceptions.PermissionDenied()
 
     @action(methods=['get', 'patch'], url_path='current-taikhoan', detail=False)
     def get_current_user(self, request):
@@ -445,26 +444,25 @@ class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
         return Response(data={'is_valid': False}, status=status.HTTP_200_OK)
 
 
-class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView):
-
+class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.ListAPIView):
     serializer_class = serializers.SinhVienSerializer
     pagination_class = paginators.SinhVienPaginator
-
-### KHI NÀO ĐĂNG NHẬP = GG VÀ PHÂN QUYỀN XONG THÌ MỚI MỞ RA DÙNG
-    # def get_permissions(self):
-    #     if self.action == "sinhvien_is_valid":
-    #         return [permissions.AllowAny()]                                             #Cho phép quyền truy cập
-    #     if isinstance(self.request.user, AnonymousUser):                                #AnonymousUser: Người dùng chưa đăng nhập
-    #         return [permissions.IsAuthenticated()]                                      #Yêu cầu truy cập
-    #     else:
-    #         if self.request.user.role == TaiKhoan.Roles.SinhVien:
-    #             if self.request.user.email == self.get_object().email:
-    #                 return [permissions.IsAuthenticated()]                              #Cấp quyền truy cập
-    #             else:
-    #                 raise exceptions.PermissionDenied()                                 #Từ chối quyền truy cập
-    #         elif (self.request.user.role == TaiKhoan.Roles.TroLySinhVien or
-    #               self.request.user.role == TaiKhoan.Roles.CongTacSinhVien):
-    #             return [permissions.IsAuthenticated()]
+    def get_permissions(self):
+        if self.action == "sinhvien_is_valid":
+            return [permissions.AllowAny()]
+        if self.action in ['create']:
+            return [permissions.AllowAny()]
+        if isinstance(self.request.user, AnonymousUser):                                #AnonymousUser: Người dùng chưa đăng nhập
+            return [permissions.IsAuthenticated()]                                      #Yêu cầu truy cập
+        else:
+            if self.request.user.role == TaiKhoan.Roles.SinhVien:
+                if self.request.user.email == self.get_object().email:
+                    return [permissions.IsAuthenticated()]                              #Cấp quyền truy cập
+                else:
+                    raise exceptions.PermissionDenied()                                 #Từ chối quyền truy cập
+            elif (self.request.user.role == TaiKhoan.Roles.TroLySinhVien or
+                  self.request.user.role == TaiKhoan.Roles.CongTacSinhVien):
+                return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         queryset = self.queryset
@@ -478,27 +476,13 @@ class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
         return queryset
 
-    @action(methods=['get'], url_path='is_valid', detail=False)
-    def sinhvien_is_valid(self, request):
-        email = self.request.query_params.get('email')
-        if email:
-            sinhvien = SinhVien.objects.filter(email=email)
-            if sinhvien:
-                return Response(data={'is_valid': True}, status=status.HTTP_200_OK)
-        return Response(data={'is_valid': False}, status=status.HTTP_404_NOT_FOUND)
+    @action(methods=['get', 'patch'], url_path='current-sinhvien', detail=False)
+    def get_current_sv(self, request):
+        sv = SinhVien.objects.get(email=request.user.email)
+        if request.method == "PATCH":
+            for k, v in request.data.items():
+                if hasattr(sv, k):  
+                    setattr(sv, k, v)
+            sv.save()
+        return Response(serializers.SinhVienSerializer(sv).data)
 
-
-    def get_permissions(self):
-        if self.action == "sinhvien_is_valid":
-            return [permissions.AllowAny()]
-        if isinstance(self.request.user, AnonymousUser):
-            return [permissions.IsAuthenticated()]
-        else:
-            if self.request.user.role == TaiKhoan.RoleChoices.SinhVien:
-                if self.request.user.email == self.get_object().email:
-                    return [permissions.IsAuthenticated()]
-                else:
-                    raise exceptions.PermissionDenied()
-            elif (self.request.user.role == TaiKhoan.RoleChoices.TroLySinhVien or
-                  self.request.user.role == TaiKhoan.RoleChoices.CVCTSV):
-                return [permissions.IsAuthenticated()]

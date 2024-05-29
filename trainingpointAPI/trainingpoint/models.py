@@ -90,7 +90,7 @@ class HocKy_NamHoc(models.Model):
 class Dieu(BaseModel):
     ma_dieu = models.CharField(max_length=10, unique=True)
     ten_dieu = models.CharField(max_length=255)
-
+    # diem = models.IntegerField()
     def __str__(self):
         return self.ten_dieu
 

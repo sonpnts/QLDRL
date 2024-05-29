@@ -33,7 +33,7 @@ const OTP = ({ route, navigation }) => {
                 message: `Mã OTP của bạn là ${randomOTP}`,
                 recipient: email,
             });
-            console.log(response.data); // In ra dữ liệu trả về từ Django
+            // console.log(response.data); // In ra dữ liệu trả về từ Django
         } catch (error) {
             console.error(error);
         }

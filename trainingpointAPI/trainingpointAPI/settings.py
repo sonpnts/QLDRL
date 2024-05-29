@@ -22,7 +22,8 @@ import cloudinary
 cloudinary.config(
     cloud_name="sonpnts",
     api_key="752187729553174",
-    api_secret="LPw7aj9WseIgRmVct7bdppxfa5g"
+    api_secret="LPw7aj9WseIgRmVct7bdppxfa5g",
+    # api_proxy="http://proxy.server:3128/"
 )
 
 # Application definition

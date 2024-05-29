@@ -44,7 +44,7 @@ export default function App({ navigation }) {
       console.log(ex)
     }
   };
-
+  
   React.useEffect(() => {
     getAccessToken();
     console.log(isAuthenticated);

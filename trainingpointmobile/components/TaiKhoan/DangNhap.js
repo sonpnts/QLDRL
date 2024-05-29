@@ -8,7 +8,6 @@ import Styles from "./Styles";
 
 
 
-
 const DangNhap = ({ navigation }) => {
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
@@ -40,8 +39,10 @@ const DangNhap = ({ navigation }) => {
             let user_role = user.data.role;
             setRole(user_role);
             setIsAuthenticated(true);
+
         } catch (ex) {
             console.error(ex);
+            
         }
     };
 

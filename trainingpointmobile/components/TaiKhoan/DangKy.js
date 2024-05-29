@@ -12,7 +12,7 @@ const DangKy = ({ route, navigation }) => {
         "username": "",
         "password": "",
         "avatar": "",
-        'role': "1"
+        'role': "4"
     })
     const [loading, setLoading] = React.useState(false);
     const [success, setSuccess] = React.useState(false);
@@ -24,7 +24,8 @@ const DangKy = ({ route, navigation }) => {
     }
 
     const handleEmailChange = (text) => {
-        change('email', text);
+        change("email", text);
+
     };
 
     const handlePasswordChange = (text) => {
@@ -59,109 +60,81 @@ const DangKy = ({ route, navigation }) => {
     };
 
     const validateDangKy = async () => {
-        setLoading(true);
+        // setLoading(true);
+
         if (validateEmail(user.email) && validatePassword(user.password) && user.avatar && user.username) {
-            let sv_valid = true; // Đã có sinh viên
+
             let tk_valid = false; // Đã có tài khoản
-            // try {
-            //     let url = `${endpoints['sinh_vien_is_valid']}?email=${user.email}`;
-            //     let check = await APIs.get(`${endpoints['sinh_vien_is_valid']}?email=${user.email}`);
-            //     if (check.status == 200) {
-            //         sv_valid = true;
-            //     }
-            // } catch (ex) {
-            //     setLoading(false);
-            //     ToastAndroid.show(ex.message, ToastAndroid.LONG);
-            // }
-            // let message = "";
-            // try {
-            //     let check = await APIs.get(`${endpoints['tai_khoan_is_valid']}?email=${user.email}&username=${user.username}`);
-            //     if (check.status == 200) {
-            //         res = check.data.is_valid;
-            //         if (res == true) {
-            //             tk_valid = true;
-            //             message = check.data.message;
-            //         }
-            //     }
-            // } catch (ex) {
-            //     setLoading(false);
-            //     ToastAndroid.show(ex.message, ToastAndroid.LONG);
-            //     Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản không hợp lệ!');
-            // }
-            if (sv_valid == true && tk_valid == false) {
-                navigation.navigate('OTP', { email: user.email });
-            } else if (sv_valid == false) {
+
+            try {
+                let check = await APIs.get(`${endpoints['tai_khoan_is_valid']}?email=${user.email}&username=${user.username}`);
+                if (check.status == 200) {
+                    res = check.data.is_valid;
+                    if (res == true) {
+                        tk_valid = true;
+                        message = check.data.message;
+                    }
+                }
+            } catch (ex) {
                 setLoading(false);
-                Alert.alert('Có lỗi gì đó xảy ra', 'Sinh viên không tồn tại!');
-            } else if (tk_valid == true) {
-                setLoading(false);
-                Alert.alert('Có lỗi gì đó xảy ra', message);
+                ToastAndroid.show(ex.message, ToastAndroid.LONG);
+                Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản sinh viên đã tồn tại!');
             }
+           if(tk_valid==false){
+               // PostTaiKhoan();
+               navigation.navigate('OTP', { email: user.email });
+           }
+           else{
+                Alert.alert('Có lỗi gì đó xảy ra', message);
+           }
         }
-        else 
+        else
         if (!user.avatar) {
-            setLoading(false);
             Alert.alert('Có lỗi gì đó xảy ra', 'Avatar không tồn tại!');
         } else if (!validateEmail(user.email)) {
-            setLoading(false);
+
             Alert.alert('Có lỗi gì đó xảy ra', 'Email nhập không hợp lệ! Vui lòng nhập dạng 10 số + tên @ou.edu.vn');
         } else if (!validatePassword(user.password)) {
-            setLoading(false);
+
             Alert.alert('Pasword nhập không hợp lệ!', 'Password phải có từ 8 ký tự trở lên');
         }
-        // else 
-        // {
-        //     setSuccess(true);
-        //     PostTaiKhoan();
-        // }
-        setLoading(false);
+
     };
 
     const PostTaiKhoan = async () => {
-        console.log(success);
-        if (success==true) {
-
-            const picker = async () => {
-                let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                if (status !== 'granted') {
-                    alert("Permissions denied!");
-                } else {
-                    const result = await ImagePicker.launchImageLibraryAsync();
-                    if (!result.canceled)
-                        setUser(current => {
-                            return { ...current, "avatar": result.assets[0] }
-                        });
-                }
-            }
-
-            let formData = new FormData();
+        if (success) {
+            setLoading(true);
+            console.log("Đã vô hàm: ");
+            let form = new FormData();
             for (let key in user) {
                 if (key === 'avatar') {
-                    formData.append(key, {
-                        uri: user.avatar.uri,
-                        name: user.avatar.fileName,
-                        type: user.avatar.type
-                        
+                    form.append(key, {
+                        uri: user[key].uri,
+                        name: user[key].fileName,
+                        type: user[key].type
                     })
-                    console.log(user.avatar.uri);
-                    console.log(user.avatar.fileName);
                 }
+
                 else
-                    formData.append(key, user[key])
+                    form.append(key, user[key])
             }
             try {
-                const response = await APIs.post(endpoints['dang_ky'], formData, {
+                console.log(form);
+                const response = await APIs.post(endpoints['dang_ky'], form, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
                 console.log(response.data);
+                setLoading(false);
+
                 Alert.alert('Tạo tài khoản thành công!');
                 navigation.replace("DangNhap");
             } catch (ex) {
-                setLoading(false);
                 ToastAndroid.show(ex.message, ToastAndroid.LONG);
-                Alert.alert('Có lỗi gì đó đã xảy ra');
+                console.error(ex);
+                setLoading(false);
+                Alert.alert('Có lỗi gì đó đã xảy ra trong lúc tạo tài khoản!', 'Vui lòng thử lại sau!',ex);
             } finally {
                 setLoading(false);
             }
@@ -172,17 +145,41 @@ const DangKy = ({ route, navigation }) => {
         navigation.replace("DangNhap");
     }
 
-    // Kiểm tra sự thay đổi params của route dùng để check otp có nhập thành công hay không
+
+
     React.useEffect(() => {
         if (route.params && route.params.success) {
-            setTimeout(() => {
-                setSuccess(route.params.success);
-                PostTaiKhoan();
-                console.log("Đã qua hàm post tk");
-            }, 100);
-            setSuccess(false);
+            console.log(route.params.success);
+            setSuccess(route.params.success);
         }
     }, [route.params]);
+
+    React.useEffect(() => {
+        const postAndResetSuccess = async () => {
+            try {
+                if (success) {
+                    console.log("success: trước ", success);
+                    await PostTaiKhoan();
+                    setSuccess(false);
+                }
+            } catch (error) {
+                console.error('Error in postAndResetSuccess:', error);
+            }
+        };
+
+        if (success) {
+            postAndResetSuccess();
+        }
+    }, [success]);
+
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+        );
+    }
 
     return (
         <ScrollView automaticallyAdjustKeyboardInsets={true}>
