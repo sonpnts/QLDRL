@@ -108,7 +108,7 @@ const SinhVienDangKy = ({ route, navigation }) => {
                 Alert.alert('Thất bại', 'Có lỗi xảy ra, vui lòng thử lại.');
             }
         } catch (error) {
-            // ToastAndroid.show(error.message, ToastAndroid.LONG);
+            ToastAndroid.show(error.message, ToastAndroid.LONG);
             Alert.alert('Lỗi', 'Có lỗi xảy ra khi cập nhật thông tin.');
         } finally {
             setLoading(false);

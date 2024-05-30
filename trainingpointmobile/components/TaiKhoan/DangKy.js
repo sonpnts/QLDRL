@@ -1,9 +1,11 @@
 import React from "react";
 import { View, Image, Text, Alert, ActivityIndicator, ScrollView, ToastAndroid } from "react-native";
-import { TextInput as PaperTextInput, Title, Button as PaperButton } from "react-native-paper";
+import { TextInput as PaperTextInput, Title, Button as PaperButton, Avatar } from "react-native-paper";
 import * as ImagePicker from 'expo-image-picker';
 import APIs, { endpoints } from "../../configs/APIs";
 import Styles from "./Styles";
+// import mime from 'mime';
+
 
 const DangKy = ({ route, navigation }) => {
     const [user, setUser] = React.useState({
@@ -111,31 +113,54 @@ const DangKy = ({ route, navigation }) => {
 
     const PostTaiKhoan = async () => {
         if (success) {
-            setLoading(true);
-            let form = new FormData();
-            for (let key in user) {
-                if (key === 'avatar') {
-                    form.append(key, {
-                        uri: user[key].uri,
-                        name: user[key].fileName,
-                        type: user[key].type
-                    });
-                } else {
-                    form.append(key, user[key]);
-                }
-            }
             try {
-                const response = await APIs.post(endpoints['dang_ky'], form, {
+                setLoading(true);
+                let form = new FormData();
+                for (let key in user) {
+                    if (key === "avatar") {
+                    form.append(key, {
+                        uri: user.avatar.uri,
+                        name: user.avatar.fileName ,
+                        type: user.avatar.type || 'image/jpeg'
+                        // type: mime.getType(user.avatar.uri) || "image/jpeg"
+
+                    });
+                    console.log("Avatar type: ", user[key].type)
+                    } else {
+                    form.append(key, user[key]);
+                    }
+                }
+
+            // for (let key in user) {
+            //     if (key === 'avatar') {
+            //         form.append(key, {
+            //             uri: user[key].uri,
+            //             name: user[key].fileName || user[key].uri.split('/').pop(), // Fallback if fileName is not available
+            //             type: user[key].type || 'image/jpeg' // Default type if not available
+            //         });
+            //     } else {
+            //         form.append(key, user[key]);
+            //     }
+            // }
+            
+                console.log(form);
+                // console.log('Avatar URI:', user.avatar.uri);
+                let res = await APIs.post(endpoints['dang_ky'], form, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
+                console.log(res.data);
                 setLoading(false);
-                Alert.alert('Tạo tài khoản thành công!');
-                navigation.navigate("SinhVienDangKy", { email: user.email });
+                if(res.status === 201){
+                    Alert.alert('Tạo tài khoản thành công!');
+                    navigation.navigate("SinhVienDangKy", { email: user.email });
+                }
+                
             } catch (ex) {
+                console.log(ex);
                 ToastAndroid.show(ex.message, ToastAndroid.LONG);
-                Alert.alert('Có lỗi gì đó đã xảy ra trong lúc tạo tài khoản!', 'Vui lòng thử lại sau!', ex);
+                Alert.alert('Có lỗi gì đó đã xảy ra trong lúc tạo tài khoản!', ex.message);
             } finally {
                 setLoading(false);
             }
@@ -158,7 +183,7 @@ const DangKy = ({ route, navigation }) => {
                 PostTaiKhoan();
                 setSuccess(false);
             } catch (error) {
-                ToastAndroid.show(error.message, ToastAndroid.LONG);
+                // ToastAndroid.show(error.message, ToastAndroid.LONG);
                 console.error('Error in postAndResetSuccess:', error);
             }
         };

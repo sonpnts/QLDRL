@@ -75,7 +75,7 @@ class HockyNamhocSerializer(serializers.ModelSerializer):
 class DieuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dieu
-        fields = ['ma_dieu','ten_dieu']
+        fields = ['ma_dieu','ten_dieu','diem_toi_da']
 
 
 class HoatDongNgoaiKhoaSerializer(serializers.ModelSerializer):

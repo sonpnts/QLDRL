@@ -4,15 +4,7 @@ const BASE_URL = 'http://192.168.1.218:8000/';
 
 
 export const endpoints = {
-    // 'categories': '/categories/',
-    // 'courses': '/courses/',
-    // 'lessons': (courseId) => `/courses/${courseId}/lessons/`,
-    // 'lesson-details': (lessonId) => `/lessons/${lessonId}/`,
-    // 'comments': (lessonId) => `/lessons/${lessonId}/comments/`,
-    // 'login': '/o/token/',
-    // 'current-user': '/users/current-user/',
-    // 'register': '/users/',
-    // 'add-comment': (lessonId) => `/lessons/${lessonId}/comments/`
+
     'dang_ky': '/taikhoans/',
     'dang_nhap': '/o/token/',
     'current_taikhoan': '/taikhoans/current-taikhoan/',
