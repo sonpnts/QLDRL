@@ -14,6 +14,7 @@ import Logout from './components/TaiKhoan/DangXuat';
 import BaiViet from './components/BanTin/BaiViet';
 import DangXuat from './components/TaiKhoan/DangXuat';
 import SinhVienDangKy from './components/TaiKhoan/SinhVien';
+import ExportBaoCao from './components/ThongKe/export';
 
 
 
@@ -70,6 +71,7 @@ export default function App({ navigation }) {
           <Stack.Screen name="OTP" component={OTP} />
           <Stack.Screen name="SinhVienDangKy" component={SinhVienDangKy} />
           <Stack.Screen name="ThemTaiKhoanTroLy" component={ThemTroLySinhVien} />
+          <Stack.Screen name="ExportBaoCao" component={ExportBaoCao} />
         </Stack.Navigator>
       </NavigationContainer>
     </MyContext.Provider>

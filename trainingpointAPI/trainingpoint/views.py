@@ -1,3 +1,7 @@
+import csv
+from io import BytesIO
+
+from django.http import HttpResponse
 from rest_framework import viewsets, generics, status, parsers, permissions, exceptions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -5,6 +9,10 @@ from trainingpoint.models import *
 from trainingpoint import serializers, paginators, perms
 from django.contrib.auth.models import AnonymousUser
 from rest_framework.views import APIView
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 
 
 class LopViewSet(viewsets.ViewSet,generics.ListAPIView):
@@ -96,14 +104,17 @@ class BaoCaoView(APIView):
     def get(self, request, id_lop, id_hoc_ky):
         try:
             lop = Lop.objects.get(pk=id_lop)
-            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__lop=lop, hk_nh_id=id_hoc_ky)
+            hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
+            sinh_viens = lop.sinhvien_set.all()  # Get all students in the class
+            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
             serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Lop.DoesNotExist:
             return Response({'error': 'Lớp không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
-        except DiemRenLuyen.DoesNotExist:
-            return Response({'error': 'Không tìm thấy dữ liệu điểm rèn luyện'}, status=status.HTTP_404_NOT_FOUND)
-
+        except HocKy_NamHoc.DoesNotExist:
+            return Response({'error': 'Học kỳ năm học không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class DieuViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Dieu.objects.filter(active=True)
     serializer_class = serializers.DieuSerializer
@@ -498,4 +509,76 @@ class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateA
                     setattr(sv, k, v)
             sv.save()
         return Response(serializers.SinhVienSerializer(sv).data)
+
+
+class ExportBaoCaoView(APIView):
+    def get(self, request, id_lop, id_hoc_ky, id_format):
+        try:
+            # format = 'pdf'  # Cố định format thành 'pdf'
+            lop = Lop.objects.get(pk=id_lop)
+            hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
+            sinh_viens = lop.sinhvien_set.all()
+            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
+            serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
+
+            if id_format == 1:
+                return self.export_csv(serializer.data)
+            elif id_format == 2:
+                return self.export_pdf(serializer.data)
+            else:
+                return Response({'error': 'Định dạng không hỗ trợ'}, status=status.HTTP_400_BAD_REQUEST)
+        except Lop.DoesNotExist:
+            return Response({'error': 'Lớp không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except HocKy_NamHoc.DoesNotExist:
+            return Response({'error': 'Học kỳ năm học không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def export_csv(self, data):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="bao_cao.csv"'
+        writer = csv.writer(response)
+
+        writer.writerow(['Sinh Viên', 'Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại'])
+        for item in data:
+            writer.writerow([item['sinh_vien'], item['lop'], item['khoa'], item['diem_tong'], item['xep_loai']])
+
+        return response
+
+
+    def export_pdf(self, data):
+        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+
+        # Sử dụng font Times New Roman với kích thước 12
+        p.setFont("TimesNewRoman", 12)
+
+        p.drawString(100, 750, "Báo cáo điểm rèn luyện")
+
+        y = 720
+        p.drawString(30, y, "Sinh Viên")
+        p.drawString(130, y, "Lớp")
+        p.drawString(230, y, "Khoa")
+        p.drawString(330, y, "Điểm Tổng")
+        p.drawString(430, y, "Xếp Loại")
+
+        y -= 20
+        for item in data:
+            p.drawString(30, y, item['sinh_vien'])
+            p.drawString(130, y, item['lop'])
+            p.drawString(230, y, item['khoa'])
+            p.drawString(330, y, str(item['diem_tong']))
+            p.drawString(430, y, item['xep_loai'])
+            y -= 20
+
+        p.showPage()
+        p.save()
+
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="bao_cao.pdf"'
+        buffer.close()
+        return response
+
 

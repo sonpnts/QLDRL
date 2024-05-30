@@ -1,7 +1,9 @@
 import axios from "axios";
 
-const BASE_URL = 'http://192.168.1.218:8000/';
+export const BASE_URL = 'http://192.168.1.218:8000/';
 
+
+// const BASE_URL = 'https://sonpnts.pythonanywhere.com/'
 
 export const endpoints = {
 
@@ -15,6 +17,7 @@ export const endpoints = {
     'send_mail': '/send_mail/',
     'khoa': '/khoas/',
     'bai_viet': '/baiviets/',
+    'bao-cao': '/bao-cao/',
     'tac_gia': (bai_viet_id) => `/baiviets/${bai_viet_id}/tac_gia/`
 }
 

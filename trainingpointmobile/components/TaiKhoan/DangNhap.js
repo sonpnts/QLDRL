@@ -18,8 +18,10 @@ const DangNhap = ({ navigation }) => {
             let res = await APIs.post(endpoints['dang_nhap'], {
                 'username': username,
                 'password': password,
-                'client_id': "Ysn92B79VeakedOxEn6ZxVk5m9498y8xAlDzWaPT",
-                'client_secret': "Vuw6wfyUKBOBs4in2hjazb5krmhVai1BAnpTS1AhSrZtBpAbQI2a9K34tBvUtjSOw1f0jW84GVZ21tGBQItWINaWPS3M5dy3TF8Yy7yhY8JAIs9R4jPfL30V34Y1g5Cs",
+                // 'client_id': "ITGERx67yOCQUySK1JXP1XnjBDEmVWvHsKiRziSK",
+                // 'client_secret': "5HEazjuCHoYyiiESfKi71JaePQozLshjXrCofUjWeWbPqQeJ6mmEZKnY2vqgOfVfCyetjURa0rUgemgEAJjnSxfyNNloc7CaEW5QzWFEFXiQ1WUqSVszGFC3duJTN8FI",
+                'client_id': 'YN17cy35cApl9PUiBuPCO0eTKgEEFtVWTV7I67lV',
+                'client_secret': '0LpVpqTQ6fcHCwCSfCqKx0JcEzFfGHnf857IuKgtsf2sl1KX3HdqlpTQBUSGiTUm3CaZeqtYZCMXn59Cqfc79pfKu1LVtNUNbIBbO0JnrfbqvAmB3N9xRCHLhDBJI1YM',
                 'grant_type': "password"
             }, {
                 headers: {
@@ -52,6 +54,9 @@ const DangNhap = ({ navigation }) => {
     const sv = () => {
         navigation.replace("SinhVienDangKy");
     }
+    const exportBaoCao = () => {
+        navigation.replace("ExportBaoCao");
+    }
 
     return (
         <View style={Styles.container}>
@@ -62,6 +67,7 @@ const DangNhap = ({ navigation }) => {
             <PaperButton onPress={login} mode="contained" style={Styles.margin_bottom_20}>Đăng nhập</PaperButton>
             <PaperButton onPress={register} mode="elevated">Đăng ký</PaperButton>
             {/*<PaperButton onPress={sv} mode="elevated">Sinh Viên</PaperButton>*/}
+             <PaperButton onPress={exportBaoCao} mode="elevated">Thống kê</PaperButton>
         </View>
     )
 }
