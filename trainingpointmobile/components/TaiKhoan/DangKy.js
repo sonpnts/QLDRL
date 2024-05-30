@@ -1,10 +1,9 @@
 import React from "react";
-import { View, TextInput, Button, Image, Text, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, ToastAndroid } from "react-native";
+import { View, Image, Text, Alert, ActivityIndicator, ScrollView, ToastAndroid } from "react-native";
 import { TextInput as PaperTextInput, Title, Button as PaperButton } from "react-native-paper";
 import * as ImagePicker from 'expo-image-picker';
 import APIs, { endpoints } from "../../configs/APIs";
 import Styles from "./Styles";
-
 
 const DangKy = ({ route, navigation }) => {
     const [user, setUser] = React.useState({
@@ -13,19 +12,24 @@ const DangKy = ({ route, navigation }) => {
         "password": "",
         "avatar": "",
         'role': "4"
-    })
+    });
+
     const [loading, setLoading] = React.useState(false);
     const [success, setSuccess] = React.useState(false);
+    const [errors, setErrors] = React.useState({
+        email: "",
+        username: "",
+        password: "",
+        avatar: ""
+    });
 
     const change = (field, value) => {
-        setUser(current => {
-            return { ...current, [field]: value }
-        })
-    }
+        setUser(current => ({ ...current, [field]: value }));
+        setErrors(current => ({ ...current, [field]: "" })); // Clear error message when the field changes
+    };
 
     const handleEmailChange = (text) => {
         change("email", text);
-
     };
 
     const handlePasswordChange = (text) => {
@@ -34,43 +38,59 @@ const DangKy = ({ route, navigation }) => {
 
     const handleUsernameChange = (text) => {
         change('username', text);
-    }
+    };
 
     const handleChooseAvatar = async () => {
-        let { status } =
-            await ImagePicker.requestMediaLibraryPermissionsAsync();
+        let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            alert("Permissions denied!");
+            Alert.alert("Permissions denied!");
         } else {
-            const result =
-                await ImagePicker.launchImageLibraryAsync();
-            if (!result.canceled)
+            const result = await ImagePicker.launchImageLibraryAsync();
+            if (!result.canceled) {
                 change('avatar', result.assets[0]);
+            }
         }
     };
 
     const validateEmail = (email) => {
-        // Regular expression to match the desired email format
         const re = /^\d{10}[a-zA-Z]+@ou\.edu\.vn$/;
         return re.test(email);
     };
 
     const validatePassword = (password) => {
-        return password.length >= 8; // Đủ dài ít nhất 8 ký tự
+        return password.length >= 8;
     };
 
     const validateDangKy = async () => {
-        // setLoading(true);
+        let valid = true;
+        let newErrors = { email: "", username: "", password: "", avatar: "" };
 
-        if (validateEmail(user.email) && validatePassword(user.password) && user.avatar && user.username) {
+        if (!validateEmail(user.email)) {
+            newErrors.email = 'Email nhập không hợp lệ! Vui lòng nhập dạng 10 số + tên @ou.edu.vn';
+            valid = false;
+        }
+        if (!validatePassword(user.password)) {
+            newErrors.password = 'Password phải có từ 8 ký tự trở lên';
+            valid = false;
+        }
+        if (!user.avatar) {
+            newErrors.avatar = 'Avatar không tồn tại!';
+            valid = false;
+        }
+        if (!user.username) {
+            newErrors.username = 'Username không được để trống!';
+            valid = false;
+        }
 
+        setErrors(newErrors);
+        let message = '';
+        if (valid) {
             let tk_valid = false; // Đã có tài khoản
-
             try {
                 let check = await APIs.get(`${endpoints['tai_khoan_is_valid']}?email=${user.email}&username=${user.username}`);
                 if (check.status == 200) {
-                    res = check.data.is_valid;
-                    if (res == true) {
+                    const res = check.data.is_valid;
+                    if (res) {
                         tk_valid = true;
                         message = check.data.message;
                     }
@@ -80,31 +100,18 @@ const DangKy = ({ route, navigation }) => {
                 ToastAndroid.show(ex.message, ToastAndroid.LONG);
                 Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản sinh viên đã tồn tại!');
             }
-           if(tk_valid==false){
-               // PostTaiKhoan();
-               navigation.navigate('OTP', { email: user.email });
-           }
-           else{
+
+            if (!tk_valid) {
+                navigation.navigate('OTP', { email: user.email });
+            } else {
                 Alert.alert('Có lỗi gì đó xảy ra', message);
-           }
+            }
         }
-        else
-        if (!user.avatar) {
-            Alert.alert('Có lỗi gì đó xảy ra', 'Avatar không tồn tại!');
-        } else if (!validateEmail(user.email)) {
-
-            Alert.alert('Có lỗi gì đó xảy ra', 'Email nhập không hợp lệ! Vui lòng nhập dạng 10 số + tên @ou.edu.vn');
-        } else if (!validatePassword(user.password)) {
-
-            Alert.alert('Pasword nhập không hợp lệ!', 'Password phải có từ 8 ký tự trở lên');
-        }
-
     };
 
     const PostTaiKhoan = async () => {
         if (success) {
             setLoading(true);
-            console.log("Đã vô hàm: ");
             let form = new FormData();
             for (let key in user) {
                 if (key === 'avatar') {
@@ -112,29 +119,23 @@ const DangKy = ({ route, navigation }) => {
                         uri: user[key].uri,
                         name: user[key].fileName,
                         type: user[key].type
-                    })
+                    });
+                } else {
+                    form.append(key, user[key]);
                 }
-
-                else
-                    form.append(key, user[key])
             }
             try {
-                console.log(form);
                 const response = await APIs.post(endpoints['dang_ky'], form, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                console.log(response.data);
                 setLoading(false);
-
                 Alert.alert('Tạo tài khoản thành công!');
-                navigation.replace("DangNhap");
+                navigation.navigate("SinhVienDangKy", { email: user.email });
             } catch (ex) {
                 ToastAndroid.show(ex.message, ToastAndroid.LONG);
-                console.error(ex);
-                setLoading(false);
-                Alert.alert('Có lỗi gì đó đã xảy ra trong lúc tạo tài khoản!', 'Vui lòng thử lại sau!',ex);
+                Alert.alert('Có lỗi gì đó đã xảy ra trong lúc tạo tài khoản!', 'Vui lòng thử lại sau!', ex);
             } finally {
                 setLoading(false);
             }
@@ -145,11 +146,8 @@ const DangKy = ({ route, navigation }) => {
         navigation.replace("DangNhap");
     }
 
-
-
     React.useEffect(() => {
         if (route.params && route.params.success) {
-            console.log(route.params.success);
             setSuccess(route.params.success);
         }
     }, [route.params]);
@@ -157,21 +155,17 @@ const DangKy = ({ route, navigation }) => {
     React.useEffect(() => {
         const postAndResetSuccess = async () => {
             try {
-                if (success) {
-                    console.log("success: trước ", success);
-                    await PostTaiKhoan();
-                    setSuccess(false);
-                }
+                PostTaiKhoan();
+                setSuccess(false);
             } catch (error) {
+                ToastAndroid.show(error.message, ToastAndroid.LONG);
                 console.error('Error in postAndResetSuccess:', error);
             }
         };
-
         if (success) {
             postAndResetSuccess();
         }
     }, [success]);
-
 
     if (loading) {
         return (
@@ -198,6 +192,7 @@ const DangKy = ({ route, navigation }) => {
                     </View>
                 )}
                 <PaperButton mode='contained-tonal' onPress={handleChooseAvatar} style={Styles.margin_bottom_20}>Chọn ảnh đại diện</PaperButton>
+                {errors.avatar ? <Text style={Styles.error}>{errors.avatar}</Text> : null}
                 <PaperTextInput
                     label="Email"
                     value={user.email}
@@ -207,6 +202,7 @@ const DangKy = ({ route, navigation }) => {
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
+                {errors.email ? <Text style={Styles.error}>{errors.email}</Text> : null}
                 <PaperTextInput
                     label="Username"
                     value={user.username}
@@ -215,6 +211,7 @@ const DangKy = ({ route, navigation }) => {
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
+                {errors.username ? <Text style={Styles.error}>{errors.username}</Text> : null}
                 <PaperTextInput
                     label="Password"
                     value={user.password}
@@ -223,7 +220,8 @@ const DangKy = ({ route, navigation }) => {
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
-                {loading === true ? <ActivityIndicator /> : <>
+                {errors.password ? <Text style={Styles.error}>{errors.password}</Text> : null}
+                {loading ? <ActivityIndicator /> : <>
                     <PaperButton mode="contained" style={Styles.margin_bottom_20} onPress={validateDangKy}>Đăng ký</PaperButton>
                 </>}
                 <PaperButton mode="elevated" style={Styles.margin_bottom_20} onPress={login}>Đã có tài khoản? Đăng nhập</PaperButton>
@@ -231,6 +229,5 @@ const DangKy = ({ route, navigation }) => {
         </ScrollView>
     );
 };
-
 
 export default DangKy;

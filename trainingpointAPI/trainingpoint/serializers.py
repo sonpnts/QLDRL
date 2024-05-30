@@ -23,10 +23,6 @@ class LopSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SinhVienSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SinhVien
-        fields = '__all__'
 
 
 class TaiKhoanSerializer(serializers.ModelSerializer):
@@ -87,6 +83,19 @@ class HoatDongNgoaiKhoaSerializer(serializers.ModelSerializer):
         model = HoatDongNgoaiKhoa
         fields = '__all__'
 
+
+class BaoCaoSerializer(serializers.ModelSerializer):
+    sinh_vien = serializers.CharField(source='sinh_vien.ho_ten')
+    lop = serializers.CharField(source='sinh_vien.lop.ten_lop')
+    khoa = serializers.CharField(source='sinh_vien.lop.khoa.ten_khoa')
+    xep_loai = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DiemRenLuyen
+        fields = ['sinh_vien', 'lop', 'khoa', 'diem_tong', 'xep_loai']
+
+    def get_xep_loai(self, obj):
+        return obj.get_xep_loai_display()
 
 class ThamGiaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -154,8 +163,6 @@ class SinhVienSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         data = validated_data.copy()
         email = data.get('email', '')
-        # Tạo đối tượng SinhVien
-
         mssv=email[:10]
         sinh_vien = SinhVien.objects.create(mssv=mssv, **validated_data)
         # Lưu đối tượng SinhVien

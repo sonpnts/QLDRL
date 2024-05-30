@@ -34,6 +34,7 @@ export default StyleSheet.create({
         marginHorizontal: 5,
         textAlign: 'center',
         fontSize: 30
-    }
+    },
+
 
 });

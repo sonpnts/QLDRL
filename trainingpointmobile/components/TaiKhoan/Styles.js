@@ -34,6 +34,11 @@ export default StyleSheet.create({
         marginHorizontal: 5,
         textAlign: 'center',
         fontSize: 30
-    }
+    },
+    error: {
+        color: 'red',
+        marginBottom: 10,
+        marginLeft: 10,
+    },
 
 });

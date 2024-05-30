@@ -18,10 +18,7 @@ class TaiKhoan(AbstractUser):
     def __str__(self):
         return self.username
 
-    # def save(self, *args, **kwargs):
-    #     super().save(*args, **kwargs)
-    #     self.set_password(self.password)
-    #     super().save(*args, **kwargs)
+
 
 
 class BaseModel(models.Model):
@@ -90,7 +87,7 @@ class HocKy_NamHoc(models.Model):
 class Dieu(BaseModel):
     ma_dieu = models.CharField(max_length=10, unique=True)
     ten_dieu = models.CharField(max_length=255)
-    # diem = models.IntegerField()
+    # diem_toi_da = models.IntegerField()
     def __str__(self):
         return self.ten_dieu
 
@@ -178,5 +175,20 @@ class DiemRenLuyen(BaseModel):
         TB = 4, 'Trung Bình'
         YEU = 5, 'Yếu'
         KEM = 6, 'Kém'
+
+    @property
+    def xep_loai(self):
+        if 90 <= self.diem_tong <= 100:
+            return self.XepLoai.XUATSAC
+        elif 80 <= self.diem_tong < 90:
+            return self.XepLoai.GIOI
+        elif 65 <= self.diem_tong < 80:
+            return self.XepLoai.KHA
+        elif 50 <= self.diem_tong < 65:
+            return self.XepLoai.TB
+        elif 35 <= self.diem_tong < 50:
+            return self.XepLoai.YEU
+        else:
+            return self.XepLoai.KEM
 
     xep_loai = models.IntegerField(choices=XepLoai.choices)

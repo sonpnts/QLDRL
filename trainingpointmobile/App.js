@@ -13,6 +13,7 @@ import { authAPI, endpoints } from './configs/APIs';
 import Logout from './components/TaiKhoan/DangXuat';
 import BaiViet from './components/BanTin/BaiViet';
 import DangXuat from './components/TaiKhoan/DangXuat';
+import SinhVienDangKy from './components/TaiKhoan/SinhVien';
 
 
 
@@ -23,6 +24,12 @@ export default function App({ navigation }) {
   const [user, dispatch] = React.useReducer(MyUserReducer, null);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [role, setRole] = React.useState();
+
+  // Hàm chuyển đổi định dạng ngày từ yyyy-MM-dd sang dd/MM/yyyy
+  const formatDate = (dateString) => {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
 
   const getAccessToken = async () => {
     try {
@@ -54,13 +61,14 @@ export default function App({ navigation }) {
     <MyContext.Provider value={[user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole]}>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{
-          headerTitle: 'Quản lý điểm rèn luyện'
+          headerTitle: 'Quản lý điểm rèn luyện sinh viên'
         }}>
           {isAuthenticated && <Stack.Screen name="Main" component={Main} options={{ headerRight: DangXuat }} />}
           {!isAuthenticated && <Stack.Screen name="DangNhap" component={DangNhap} />}
           <Stack.Screen name="BaiViet" component={BaiViet} />
           <Stack.Screen name="DangKy" component={DangKy} />
           <Stack.Screen name="OTP" component={OTP} />
+          <Stack.Screen name="SinhVienDangKy" component={SinhVienDangKy} />
           <Stack.Screen name="ThemTaiKhoanTroLy" component={ThemTroLySinhVien} />
         </Stack.Navigator>
       </NavigationContainer>

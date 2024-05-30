@@ -7,7 +7,7 @@ class SendEmailViewSet(viewsets.ViewSet):
         subject = request.data.get('subject')
         message = request.data.get('message')
         recipient_list = [request.data.get('recipient')]
-        sender = 'phamngoctruongson2003@gmail.com'  # Thay bằng email của bạn
+        sender = 'phamngoctruongson2003@gmail.com'
 
         send_mail(subject, message, sender, recipient_list)
         return Response({'success': True})

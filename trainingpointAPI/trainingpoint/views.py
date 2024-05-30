@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from trainingpoint.models import *
 from trainingpoint import serializers, paginators, perms
 from django.contrib.auth.models import AnonymousUser
+from rest_framework.views import APIView
 
 
 class LopViewSet(viewsets.ViewSet,generics.ListAPIView):
@@ -91,6 +92,18 @@ class HocKyNamHocViewset(viewsets.ViewSet, generics.RetrieveAPIView):
         return [permissions.AllowAny()]
 
 
+class BaoCaoView(APIView):
+    def get(self, request, id_lop, id_hoc_ky):
+        try:
+            lop = Lop.objects.get(pk=id_lop)
+            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__lop=lop, hk_nh_id=id_hoc_ky)
+            serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Lop.DoesNotExist:
+            return Response({'error': 'Lớp không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except DiemRenLuyen.DoesNotExist:
+            return Response({'error': 'Không tìm thấy dữ liệu điểm rèn luyện'}, status=status.HTTP_404_NOT_FOUND)
+
 class DieuViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Dieu.objects.filter(active=True)
     serializer_class = serializers.DieuSerializer
@@ -131,7 +144,7 @@ class DieuViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
                         status=status.HTTP_200_OK)
 
 
-class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView,
+class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet,generics.CreateAPIView, generics.ListCreateAPIView, generics.UpdateAPIView,
                                generics.DestroyAPIView):
     queryset = HoatDongNgoaiKhoa.objects.filter(active=True)
     serializer_class = serializers.HoatDongNgoaiKhoaSerializer
