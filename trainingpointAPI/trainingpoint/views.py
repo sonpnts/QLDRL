@@ -635,6 +635,137 @@ class ExportBaoCaoViewLop(APIView):
         buffer.close()
         return response
 
+class ExportBaoCaoViewKhoa(APIView):
+    def get(self, request, id_khoa, id_hoc_ky, id_format):
+        try:
+            khoa = Khoa.objects.get(pk=id_khoa)
+            hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
+            lop_list = Lop.objects.filter(khoa_id=khoa.id)
+            sinh_viens = SinhVien.objects.filter(lop__in=lop_list)
+            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
+            serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
+
+            if id_format == 1:
+                return self.export_csv(serializer.data, khoa, hoc_ky_nam_hoc)
+            elif id_format == 2:
+                return self.export_pdf(serializer.data, khoa, hoc_ky_nam_hoc)
+            else:
+                return Response({'error': 'Định dạng không hỗ trợ'}, status=status.HTTP_400_BAD_REQUEST)
+        except Khoa.DoesNotExist:
+            return Response({'error': 'Khoa không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except HocKy_NamHoc.DoesNotExist:
+            return Response({'error': 'Học kỳ năm học không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def export_csv(self, data, khoa, hk):
+        response = HttpResponse(content_type='text/csv')
+        file_name = f"bao_cao_diem_ren_luyen_khoa_{khoa}.csv"
+        file_name_ascii = unidecode(file_name).lower()
+        response['Content-Disposition'] = f'attachment; filename="{file_name_ascii}"'
+
+        writer = csv.writer(response)
+
+        # Get current date and time
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Write header
+        writer.writerow(['', '', '', '', '', f"Ngày in: {now}"])
+        writer.writerow(['', '', '', '', '', f"Mẫu: Báo cáo điểm rèn luyện"])
+        writer.writerow([])
+
+        # Write title
+        writer.writerow([f"Báo cáo điểm rèn luyện khoa {khoa} - Học kì {hk}", '', '', '', '', ''])
+        writer.writerow([])
+
+        # Write table headers
+        writer.writerow(['Sinh Viên', 'Mã số sinh viên', 'Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại'])
+
+        # Write table data
+        for item in data:
+            writer.writerow(
+                [item['sinh_vien'], item['mssv'], item['lop'], item['khoa'], item['diem_tong'], item['xep_loai']])
+
+        return response
+
+    def export_pdf(self, data, khoa, hk):
+        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+        pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', 'timesbd.ttf'))
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+
+        # Define styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'title',
+            parent=styles['Title'],
+            fontName='TimesNewRoman-Bold',
+            fontSize=16,
+            alignment=1  # Center alignment
+        )
+        header_style = ParagraphStyle(
+            'header',
+            parent=styles['Normal'],
+            fontName='TimesNewRoman',
+            fontSize=10,
+            alignment=2,  # Right alignment
+            italic=True
+        )
+        table_style = TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'TimesNewRoman'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ])
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Add header
+        header = Paragraph(f"Ngày in: {now}<br/>Mẫu: Báo cáo điểm rèn luyện", header_style)
+        elements.append(header)
+        elements.append(Spacer(1, 12))
+
+        # Add title
+        title = Paragraph(f"Báo cáo điểm rèn luyện khoa {khoa}<br/>Học kì {hk}", title_style)
+        elements.append(title)
+        elements.append(Spacer(1, 12))
+
+        # Create table data
+        data_table = [['Sinh Viên', 'Mã số sinh viên', 'Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại']]
+        for item in data:
+            data_table.append([
+                item['sinh_vien'],
+                item['mssv'],
+                item['lop'],
+                item['khoa'],
+                str(item['diem_tong']),
+                item['xep_loai']
+            ])
+
+        col_widths = [120, 100, 100, 80, 80]
+        # Create table
+        table = Table(data_table, colWidths=col_widths)
+        table.setStyle(table_style)
+        elements.append(table)
+
+        # Build PDF
+        doc.build(elements)
+
+        file_name = f"bao_cao_diem_ren_luyen_khoa_{khoa}.pdf"
+        file_name_ascii = unidecode(file_name).lower()
+
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{file_name_ascii}"'
+
+        buffer.close()
+        return response
 
 class BaoCaoView(APIView):
     def get(self, request, id_lop, id_hoc_ky):

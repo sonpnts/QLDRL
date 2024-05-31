@@ -147,20 +147,22 @@ const SinhVienDangKy = ({ route, navigation }) => {
                 />
 
                 <TouchableOpacity onPress={showDatePicker}>
-                    <DateTimePickerModal
-                        isVisible = {isDatePickerVisible}
-                        mode="date"
-                        onConfirm={handleConfirm}
-                        onCancel={hideDatePicker}
-                    />
-                    <PaperTextInput // Sử dụng PaperTextInput thay vì PaperButton
-                        label="Ngày sinh"
-                        value={formatDate(sv.ngay_sinh)}
-                        mode="outlined"
-                        style={Styles.margin_bottom_20}
-                        editable={false} // Không cho phép chỉnh sửa trực tiếp
-                    />
+                    <View pointerEvents="none">
+                        <PaperTextInput
+                            label="Ngày sinh"
+                            value={formatDate(sv.ngay_sinh)}
+                            mode="outlined"
+                            style={Styles.margin_bottom_20}
+                            editable={false} // Không cho phép chỉnh sửa trực tiếp
+                        />
+                    </View>
                 </TouchableOpacity>
+                <DateTimePickerModal
+                    isVisible={isDatePickerVisible}
+                    mode="date"
+                    onConfirm={handleConfirm}
+                    onCancel={hideDatePicker}
+                />
 
                 <View style={[Styles.margin_bottom_20, { borderColor: '#000', borderWidth: 1, borderRadius: 4 }]}>
                 <Picker

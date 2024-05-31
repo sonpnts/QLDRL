@@ -1,26 +1,170 @@
-import { Picker } from "@react-native-picker/picker";
-import { ScrollView, View, Image, ActivityIndicator, Alert } from "react-native";
-import { TextInput as PaperTextInput, Title, Button as PaperButton } from "react-native-paper";
 import React from "react";
-import Styles from "./Styles";
+import { Picker } from "@react-native-picker/picker";
+import { ScrollView, View, Image, ActivityIndicator, Alert, Text } from "react-native";
+import { TextInput as PaperTextInput, Title, Button as PaperButton } from "react-native-paper";
 import * as ImagePicker from 'expo-image-picker';
 import APIs, { endpoints } from "../../configs/APIs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-const ThemTroLySinhVien = () => {
-    const [selectedKhoa, setSelectedKhoa] = React.useState();
-    const [avatar, setAvatar] = React.useState(null);
-    const [loading, setLoading] = React.useState(false);
+import Styles from "./Styles";
+
+const ThemTroLySinhVien = ({ navigation }) => {
+    const [assistant, setAssistant] = React.useState({
+        email: "",
+        username: "",
+        firstname: "",
+        lastname: "",
+        password: "",
+        avatar: "",
+        role: "3",
+        khoa: null
+    });
+
     const [khoa, setKhoa] = React.useState([]);
+    const [loading, setLoading] = React.useState(false);
+    const [errors, setErrors] = React.useState({
+        email: "",
+        username: "",
+        firstname: "",
+        lastname: "",
+        password: "",
+        avatar: "",
+        khoa: ""
+    });
+
+    const change = (field, value) => {
+        setAssistant(current => ({ ...current, [field]: value }));
+        setErrors(current => ({ ...current, [field]: "" })); // Clear error message when the field changes
+    };
+
     const handleChooseAvatar = async () => {
-        let { status } =
-            await ImagePicker.requestMediaLibraryPermissionsAsync();
+        let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            alert("Permissions denied!");
+            Alert.alert("Permissions denied!");
         } else {
-            const result =
-                await ImagePicker.launchImageLibraryAsync();
-            if (!result.canceled)
-                setAvatar(result.assets[0]);
+            const result = await ImagePicker.launchImageLibraryAsync();
+            if (!result.canceled) {
+                change('avatar', result.assets[0]);
+            }
+        }
+    };
+
+    const validateEmail = (email) => {
+        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return re.test(email);
+    };
+
+    const validatePassword = (password) => {
+        return password.length >= 8;
+    };
+
+    const validateForm = async () => {
+        let valid = true;
+        let newErrors = {  username: "", firstname: "", lastname: "", password: "", avatar: "", khoa: "" };
+
+        // if (!validateEmail(assistant.email)) {
+        //     newErrors.email = 'Email không hợp lệ!';
+        //     valid = false;
+        // }
+        if (!validatePassword(assistant.password)) {
+            newErrors.password = 'Password phải có từ 8 ký tự trở lên';
+            valid = false;
+        }
+        if (!assistant.avatar) {
+            newErrors.avatar = 'Avatar không tồn tại!';
+            valid = false;
+        }
+        if (!assistant.username) {
+            newErrors.username = 'Username không được để trống!';
+            valid = false;
+        }
+        if (!assistant.firstname) {
+            newErrors.firstname = 'Firstname không được để trống!';
+            valid = false;
+        }
+        if (!assistant.lastname) {
+            newErrors.lastname = 'Lastname không được để trống!';
+            valid = false;
+        }
+        if (!assistant.khoa) {
+            newErrors.khoa = 'Khoa không được để trống!';
+            valid = false;
+        }
+
+        setErrors(newErrors);
+        return valid;
+    };
+
+    const postAssistant = async () => {
+        if (await validateForm()) {
+            try {
+                let tk_valid = false; // Đã có tài khoản
+                try {
+                    let check = await APIs.get(`${endpoints['tai_khoan_is_valid']}?email=${assistant.email}&username=${assistant.username}`);
+                    if (check.status == 200) {
+                        const res = check.data.is_valid;
+                        if (res) {
+                            setLoading(true);
+                            let form = new FormData();
+                            for (let key in assistant) {
+                                if (key === "avatar") {
+                                    form.append(key, {
+                                        uri: assistant.avatar.uri,
+                                        name: assistant.avatar.fileName,
+                                        type: assistant.avatar.type || 'image/jpeg'
+                                    });
+                                } else {
+                                    form.append(key, assistant[key]);
+                                }
+                            }
+
+                            let accessToken = await AsyncStorage.getItem('access-token');
+                            let res = await APIs.post(endpoints['dang_ky'], form, {
+                                headers: {
+                                    'Content-Type': 'multipart/form-data',
+                                    'Authorization': `Bearer ${accessToken}`
+                                }
+                            });
+
+                            if (res.status === 201) {
+                                Alert.alert('Thêm trợ lý sinh viên thành công!');
+                             
+                
+                                // Reset assistant data after successful creation
+                                setAssistant({
+                                    email: "",
+                                    username: "",
+                                    firstname: "",
+                                    lastname: "",
+                                    password: "",
+                                    avatar: "",
+                                    role: "3",
+                                    khoa: null
+                                });
+                
+                                // Clear errors
+                                setErrors({
+                                    email: "",
+                                    username: "",
+                                    firstname: "",
+                                    lastname: "",
+                                    password: "",
+                                    avatar: "",
+                                    khoa: ""
+                                });
+                            }
+                        }
+                    }
+                } catch (ex) {
+                    setLoading(false);
+                    Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản trợ lý sinh viên đã tồn tại!');
+                }
+                
+            } catch (ex) {
+                console.log(ex);
+                Alert.alert('Có lỗi gì đó đã xảy ra!', ex.message);
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -29,95 +173,95 @@ const ThemTroLySinhVien = () => {
             const khoas = await APIs.get(endpoints['khoa']);
             setKhoa(khoas.data);
         } catch (ex) {
-            Alert.alert("hello");
-        }
-    };
-
-    const getAccessToken = async () => {
-        try {
-            const accessToken = await AsyncStorage.getItem('access-token');
-            if (accessToken !== null) {
-                // Mục đã được tìm thấy trong AsyncStorage
-                console.log('Access token:', accessToken);
-                return accessToken;
-            } else {
-                // Mục không tồn tại trong AsyncStorage
-                console.log('Access token not found');
-                return null;
-            }
-        } catch (error) {
-            // Xử lý lỗi nếu có
-            console.error('Error getting access token:', error);
-            return null;
+            Alert.alert('Có lỗi gì đó đã xảy ra khi lấy dữ liệu khoa!', ex.message);
         }
     };
 
     React.useEffect(() => {
-        getAccessToken();
         getKhoas();
     }, []);
 
     return (
-        <ScrollView automaticallyAdjustKeyboardInsets={true} >
+        <ScrollView automaticallyAdjustKeyboardInsets={true}>
             <View style={Styles.container}>
-                {avatar && (
+                <View style={Styles.margin_bottom_40}>
+                    <Title numberOfLines={1} ellipsizeMode="tail" style={[Styles.subject, Styles.align_item_center]}>
+                        Thêm trợ lý sinh viên
+                    </Title>
+                </View>
+                {assistant.avatar && (
                     <View style={[Styles.align_item_center, Styles.margin_bottom_20]}>
                         <Image
-                            source={{ uri: avatar.uri }}
+                            source={{ uri: assistant.avatar.uri }}
                             style={Styles.avatar}
                         />
                     </View>
                 )}
                 <PaperButton mode='contained-tonal' onPress={handleChooseAvatar} style={Styles.margin_bottom_20}>Chọn ảnh đại diện</PaperButton>
+                {errors.avatar ? <Text style={Styles.error}>{errors.avatar}</Text> : null}
                 <PaperTextInput
                     label="Email"
+                    value={assistant.email}
+                    onChangeText={text => change("email", text)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
+                {errors.email ? <Text style={Styles.error}>{errors.email}</Text> : null}
                 <PaperTextInput
                     label="Username"
+                    value={assistant.username}
+                    onChangeText={text => change("username", text)}
                     autoCapitalize="none"
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
+                {errors.username ? <Text style={Styles.error}>{errors.username}</Text> : null}
                 <PaperTextInput
                     label="Firstname"
+                    value={assistant.firstname}
+                    onChangeText={text => change("firstname", text)}
                     autoCapitalize="none"
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
+                {errors.firstname ? <Text style={Styles.error}>{errors.firstname}</Text> : null}
                 <PaperTextInput
                     label="Lastname"
+                    value={assistant.lastname}
+                    onChangeText={text => change("lastname", text)}
                     autoCapitalize="none"
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
+                {errors.lastname ? <Text style={Styles.error}>{errors.lastname}</Text> : null}
                 <PaperTextInput
                     label="Password"
+                    value={assistant.password}
+                    onChangeText={text => change("password", text)}
                     secureTextEntry
                     mode="outlined"
                     style={Styles.margin_bottom_20}
                 />
+                {errors.password ? <Text style={Styles.error}>{errors.password}</Text> : null}
                 <View style={[Styles.margin_bottom_20, { borderColor: 'purple', borderWidth: 1, borderRadius: 25 }]}>
                     <Picker
-                        selectedValue={selectedKhoa}
-                        onValueChange={(itemValue, itemIndex) =>
-                            setSelectedKhoa(itemValue)
-                        }>
+                        selectedValue={assistant.khoa}
+                        onValueChange={(itemValue) => change("khoa", itemValue)}
+                    >
                         {khoa.map(k => (
                             <Picker.Item label={k.ten_khoa} value={k.id} key={k.id} />
                         ))}
                     </Picker>
                 </View>
-
-                {loading === true ? <ActivityIndicator /> : <>
-                    <PaperButton mode="elevated" >Thêm trợ lý sinh viên</PaperButton>
-                </>}
+                {errors.khoa ? <Text style={Styles.error}>{errors.khoa}</Text> : null}
+                {loading ? <ActivityIndicator /> : (
+                    <PaperButton mode="contained" style={Styles.margin_bottom_20} onPress={postAssistant}>Thêm trợ lý sinh viên</PaperButton>
+                )}
             </View>
         </ScrollView>
-    )
-}
+    );
+};
 
 export default ThemTroLySinhVien;

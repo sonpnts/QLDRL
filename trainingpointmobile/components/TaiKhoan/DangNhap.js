@@ -66,8 +66,8 @@ const DangNhap = ({ navigation }) => {
             <PaperTextInput value={password} label="Password" mode="outlined" onChangeText={t => setPassword(t)} secureTextEntry={true} placeholder="Password..." style={Styles.margin_bottom_20} />
             <PaperButton onPress={login} mode="contained" style={Styles.margin_bottom_20}>Đăng nhập</PaperButton>
             <PaperButton onPress={register} mode="elevated">Đăng ký</PaperButton>
-            {/*<PaperButton onPress={sv} mode="elevated">Sinh Viên</PaperButton>*/}
-             <PaperButton onPress={exportBaoCao} mode="elevated">Thống kê</PaperButton>
+            {/* <PaperButton onPress={sv} mode="elevated">Sinh Viên</PaperButton>
+             <PaperButton onPress={exportBaoCao} mode="elevated">Thống kê</PaperButton> */}
         </View>
     )
 }

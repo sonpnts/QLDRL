@@ -130,18 +130,6 @@ const DangKy = ({ route, navigation }) => {
                     form.append(key, user[key]);
                     }
                 }
-
-            // for (let key in user) {
-            //     if (key === 'avatar') {
-            //         form.append(key, {
-            //             uri: user[key].uri,
-            //             name: user[key].fileName || user[key].uri.split('/').pop(), // Fallback if fileName is not available
-            //             type: user[key].type || 'image/jpeg' // Default type if not available
-            //         });
-            //     } else {
-            //         form.append(key, user[key]);
-            //     }
-            // }
             
                 console.log(form);
                 // console.log('Avatar URI:', user.avatar.uri);
