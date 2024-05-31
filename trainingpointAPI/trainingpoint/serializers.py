@@ -86,13 +86,14 @@ class HoatDongNgoaiKhoaSerializer(serializers.ModelSerializer):
 
 class BaoCaoSerializer(serializers.ModelSerializer):
     sinh_vien = serializers.CharField(source='sinh_vien.ho_ten')
+    mssv= serializers.CharField(source='sinh_vien.mssv')
     lop = serializers.CharField(source='sinh_vien.lop.ten_lop')
     khoa = serializers.CharField(source='sinh_vien.lop.khoa.ten_khoa')
     xep_loai = serializers.SerializerMethodField()
 
     class Meta:
         model = DiemRenLuyen
-        fields = ['sinh_vien', 'lop', 'khoa', 'diem_tong', 'xep_loai']
+        fields = ['sinh_vien','mssv', 'lop', 'khoa', 'diem_tong', 'xep_loai']
 
     def get_xep_loai(self, obj):
         return obj.get_xep_loai_display()

@@ -49,7 +49,7 @@ export default function ExportBaoCao() {
         }
         try {
         const formatValue = format === 'csv' ? 1 : 2;
-        let url = BASE_URL + (`bao-cao/${selectedLop}/1/${formatValue}/`);
+        let url = BASE_URL + (`bao-cao-lop/${selectedLop}/1/${formatValue}/`);
         console.log(url);
         
         const downloadedPdf = await FileSystem.downloadAsync(

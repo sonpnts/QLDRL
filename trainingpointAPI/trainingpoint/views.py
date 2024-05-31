@@ -1,7 +1,9 @@
 import csv
 from io import BytesIO
-
+from datetime import datetime
+from unidecode import unidecode
 from django.http import HttpResponse
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from rest_framework import viewsets, generics, status, parsers, permissions, exceptions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +15,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Frame
+from reportlab.lib import colors
 
 
 class LopViewSet(viewsets.ViewSet,generics.ListAPIView):
@@ -100,21 +104,7 @@ class HocKyNamHocViewset(viewsets.ViewSet, generics.RetrieveAPIView):
         return [permissions.AllowAny()]
 
 
-class BaoCaoView(APIView):
-    def get(self, request, id_lop, id_hoc_ky):
-        try:
-            lop = Lop.objects.get(pk=id_lop)
-            hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
-            sinh_viens = lop.sinhvien_set.all()  # Get all students in the class
-            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
-            serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Lop.DoesNotExist:
-            return Response({'error': 'Lớp không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
-        except HocKy_NamHoc.DoesNotExist:
-            return Response({'error': 'Học kỳ năm học không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class DieuViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Dieu.objects.filter(active=True)
     serializer_class = serializers.DieuSerializer
@@ -471,6 +461,7 @@ class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
 class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.ListAPIView):
     serializer_class = serializers.SinhVienSerializer
     pagination_class = paginators.SinhVienPaginator
+    queryset = SinhVien.objects.all()
     def get_permissions(self):
         if self.action == "sinhvien_is_valid":
             return [permissions.AllowAny()]
@@ -511,20 +502,21 @@ class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateA
         return Response(serializers.SinhVienSerializer(sv).data)
 
 
-class ExportBaoCaoView(APIView):
+class ExportBaoCaoViewLop(APIView):
     def get(self, request, id_lop, id_hoc_ky, id_format):
         try:
             # format = 'pdf'  # Cố định format thành 'pdf'
             lop = Lop.objects.get(pk=id_lop)
+            khoa=Khoa.objects.get(pk=lop.khoa_id)
             hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
             sinh_viens = lop.sinhvien_set.all()
             diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
             serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
 
             if id_format == 1:
-                return self.export_csv(serializer.data)
+                return self.export_csv(serializer.data, lop,khoa,hoc_ky_nam_hoc)
             elif id_format == 2:
-                return self.export_pdf(serializer.data)
+                return self.export_pdf(serializer.data, lop,khoa,hoc_ky_nam_hoc)
             else:
                 return Response({'error': 'Định dạng không hỗ trợ'}, status=status.HTTP_400_BAD_REQUEST)
         except Lop.DoesNotExist:
@@ -534,51 +526,129 @@ class ExportBaoCaoView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def export_csv(self, data):
+    def export_csv(self, data, lop, khoa, hk):
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="bao_cao.csv"'
+        file_name = f"bao_cao_diem_ren_luyen_lop_{lop}_khoa_{khoa}.csv"
+        file_name_ascii = unidecode(file_name).lower()
+        response['Content-Disposition'] = f'attachment; filename="{file_name_ascii}"'
+
         writer = csv.writer(response)
 
-        writer.writerow(['Sinh Viên', 'Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại'])
+        # Get current date and time
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Write header
+        writer.writerow(['', '', '', '', '', f"Ngày in: {now}"])
+        writer.writerow(['', '', '', '', '', f"Mẫu: Báo cáo điểm rèn luyện"])
+        writer.writerow([])
+
+        # Write title
+        writer.writerow([f"Báo cáo điểm rèn luyện lớp {lop} - Khoa {khoa} - Học kì {hk}", '', '', '', '', ''])
+        writer.writerow([])
+
+        # Write table headers
+        writer.writerow(['Sinh Viên', 'Mã số sinh viên', 'Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại'])
+
+        # Write table data
         for item in data:
-            writer.writerow([item['sinh_vien'], item['lop'], item['khoa'], item['diem_tong'], item['xep_loai']])
+            writer.writerow(
+                [item['sinh_vien'], item['mssv'], item['lop'], item['khoa'], item['diem_tong'], item['xep_loai']])
 
         return response
 
-
-    def export_pdf(self, data):
+    def export_pdf(self, data, lop, khoa,hk):
         pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+        pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', 'timesbd.ttf'))
+
 
         buffer = BytesIO()
-        p = canvas.Canvas(buffer, pagesize=letter)
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
 
-        # Sử dụng font Times New Roman với kích thước 12
-        p.setFont("TimesNewRoman", 12)
+        # Define styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'title',
+            parent=styles['Title'],
+            fontName='TimesNewRoman-Bold',
+            fontSize=16,
+            alignment=1  # Center alignment
+        )
+        header_style = ParagraphStyle(
+            'header',
+            parent=styles['Normal'],
+            fontName='TimesNewRoman',
+            fontSize=10,
+            alignment=2,  # Right alignment
+            italic=True
+        )
+        table_style = TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'TimesNewRoman'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ])
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Add header
+        # Add header
+        header = Paragraph(f"Ngày in: {now}<br/>Mẫu: Báo cáo điểm rèn luyện", header_style)
+        elements.append(header)
+        elements.append(Spacer(1, 12))
 
-        p.drawString(100, 750, "Báo cáo điểm rèn luyện")
+        # Add title
+        title = Paragraph(f"Báo cáo điểm rèn luyện lớp {lop} - Khoa {khoa}<br/>Học kì {hk}", title_style)
+        elements.append(title)
+        elements.append(Spacer(1, 12))
 
-        y = 720
-        p.drawString(30, y, "Sinh Viên")
-        p.drawString(130, y, "Lớp")
-        p.drawString(230, y, "Khoa")
-        p.drawString(330, y, "Điểm Tổng")
-        p.drawString(430, y, "Xếp Loại")
-
-        y -= 20
+        # Create table data
+        data_table = [['Sinh Viên', 'Mã số sinh viên','Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại']]
         for item in data:
-            p.drawString(30, y, item['sinh_vien'])
-            p.drawString(130, y, item['lop'])
-            p.drawString(230, y, item['khoa'])
-            p.drawString(330, y, str(item['diem_tong']))
-            p.drawString(430, y, item['xep_loai'])
-            y -= 20
+            data_table.append([
+                item['sinh_vien'],
+                item['mssv'],
+                item['lop'],
+                item['khoa'],
+                str(item['diem_tong']),
+                item['xep_loai']
+            ])
 
-        p.showPage()
-        p.save()
+        col_widths = [120, 100, 100, 80, 80]
+        # Create table
+        table = Table(data_table, colWidths=col_widths)
+        table.setStyle(table_style)
+        elements.append(table)
+
+
+        # Create a frame to hold the elements
+        doc.build(elements)
+        file_name = f"bao_cao_diem_ren_luyen_lop_{lop}_khoa_{khoa}.pdf"
+        file_name_ascii = unidecode(file_name).lower()
 
         response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="bao_cao.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="{file_name_ascii}"'
+
         buffer.close()
         return response
 
+
+class BaoCaoView(APIView):
+    def get(self, request, id_lop, id_hoc_ky):
+        try:
+            lop = Lop.objects.get(pk=id_lop)
+            hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
+            sinh_viens = lop.sinhvien_set.all()  # Get all students in the class
+            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
+            serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Lop.DoesNotExist:
+            return Response({'error': 'Lớp không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except HocKy_NamHoc.DoesNotExist:
+            return Response({'error': 'Học kỳ năm học không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

@@ -168,6 +168,7 @@ class DiemRenLuyen(BaseModel):
     hk_nh = models.ForeignKey(HocKy_NamHoc, on_delete=models.CASCADE)
     diem_tong = models.IntegerField()
 
+
     class XepLoai(models.IntegerChoices):
         XUATSAC = 1, 'Xuất Sắc'
         GIOI = 2, 'Giỏi'
@@ -176,19 +177,20 @@ class DiemRenLuyen(BaseModel):
         YEU = 5, 'Yếu'
         KEM = 6, 'Kém'
 
-    @property
-    def xep_loai(self):
-        if 90 <= self.diem_tong <= 100:
-            return self.XepLoai.XUATSAC
-        elif 80 <= self.diem_tong < 90:
-            return self.XepLoai.GIOI
-        elif 65 <= self.diem_tong < 80:
-            return self.XepLoai.KHA
-        elif 50 <= self.diem_tong < 65:
-            return self.XepLoai.TB
-        elif 35 <= self.diem_tong < 50:
-            return self.XepLoai.YEU
-        else:
-            return self.XepLoai.KEM
+    xep_loai = models.IntegerField(choices=XepLoai.choices, editable=False)
 
-    xep_loai = models.IntegerField(choices=XepLoai.choices)
+    def save(self, *args, **kwargs):
+        if 90 <= self.diem_tong <= 100:
+            self.xep_loai = self.XepLoai.XUATSAC
+        elif 80 <= self.diem_tong < 90:
+            self.xep_loai = self.XepLoai.GIOI
+        elif 65 <= self.diem_tong < 80:
+            self.xep_loai = self.XepLoai.KHA
+        elif 50 <= self.diem_tong < 65:
+            self.xep_loai = self.XepLoai.TB
+        elif 35 <= self.diem_tong < 50:
+            self.xep_loai = self.XepLoai.YEU
+        else:
+            self.xep_loai = self.XepLoai.KEM
+
+        super().save(*args, **kwargs)
