@@ -18,7 +18,9 @@ export const endpoints = {
     'khoa': '/khoas/',
     'bai_viet': '/baiviets/',
     'bao-cao': '/bao-cao/',
-    'tac_gia': (bai_viet_id) => `/baiviets/${bai_viet_id}/tac_gia/`
+    'baiviet_tag': (bai_viet_id) => `/baiviets/${bai_viet_id}/tags/`,
+    'tac_gia': (bai_viet_id) => `/baiviets/${bai_viet_id}/tac_gia/`,
+    'baiviet_like': (bai_viet_id) => `/baiviets/${bai_viet_id}/like/`,
 }
 
 export const authAPI = (accessToken) => axios.create({

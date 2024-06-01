@@ -196,7 +196,7 @@ class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Upda
                 else:
                     if (self.request.user.is_authenticated and
                             self.request.user.role in [TaiKhoan.Roles.TroLySinhVien.value,
-                                                       TaiKhoan.Roles.ADMIN.value]):
+                                                       TaiKhoan.Roles.CongTacSinhVien.value]):
                         return [permissions.IsAuthenticated()]
                     else:
                         raise exceptions.PermissionDenied()
@@ -242,7 +242,7 @@ class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Upda
 
         return Response(serializers.CommentSerializer(c).data, status=status.HTTP_201_CREATED)
 
-    @action(methods=['post'], url_path='likes', detail=True)
+    @action(methods=['post'], url_path='like', detail=True)
     def like(self, request, pk):
         li, created = Like.objects.get_or_create(bai_viet=self.get_object(), tai_khoan=request.user)
 
@@ -253,12 +253,26 @@ class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Upda
         return Response(
             serializers.AuthenticatedBaiVietTagSerializer(self.get_object(), context={'request': request}).data, status=status.HTTP_201_CREATED)
 
+
+
+
     @action(methods=['get'], url_path='tac_gia', detail=True)
     def get_tacgia(self, request, pk):
         baiviet = self.get_object()
         tacgia = TaiKhoan.objects.get(id=baiviet.id)
         return Response(serializers.TaiKhoanSerializer(tacgia).data, status=status.HTTP_200_OK)
 
+    @action(methods=['get'], url_path='tags', detail=True)
+    def get_tag(self, request, pk=None):
+        try:
+            baiviet = self.get_object()
+            tags = baiviet.tags.all()
+            serializer = serializers.TagSerializier(tags, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except BaiViet.DoesNotExist:
+            return Response({'error': 'Bài viết không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TagViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Tag.objects.all()
@@ -292,6 +306,8 @@ class TagViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAP
         baiviet = self.get_object().baiviets.all()
         return Response(serializers.BaiVietSerializer(baiviet, many=True).data,
                         status=status.HTTP_200_OK)
+
+
 
 
 class CommentViewset(viewsets.ViewSet, generics.CreateAPIView, generics.DestroyAPIView, generics.UpdateAPIView):
@@ -503,6 +519,21 @@ class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateA
 
 
 class ExportBaoCaoViewLop(APIView):
+
+    # def get_students(self, id_lop, id_hoc_ky):
+    #     try:
+    #         lop = Lop.objects.get(pk=id_lop)
+    #         khoa = Khoa.objects.get(pk=lop.khoa_id)
+    #         hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
+    #         sinh_viens = lop.sinhvien_set.all()
+    #         diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
+    #         return sinh_viens, diem_ren_luyen, lop, khoa, hoc_ky_nam_hoc
+    #     except Lop.DoesNotExist:
+    #         raise ValueError('Lớp không tồn tại')
+    #     except HocKy_NamHoc.DoesNotExist:
+    #         raise ValueError('Học kỳ năm học không tồn tại')
+
+
     def get(self, request, id_lop, id_hoc_ky, id_format):
         try:
             # format = 'pdf'  # Cố định format thành 'pdf'
@@ -767,7 +798,7 @@ class ExportBaoCaoViewKhoa(APIView):
         buffer.close()
         return response
 
-class BaoCaoView(APIView):
+class BaoCaoViewLop(APIView):
     def get(self, request, id_lop, id_hoc_ky):
         try:
             lop = Lop.objects.get(pk=id_lop)
@@ -783,3 +814,19 @@ class BaoCaoView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class BaoCaoViewKhoa(APIView):
+    def get(self, request, id_khoa, id_hoc_ky):
+        try:
+            khoa = Khoa.objects.get(pk=id_khoa)
+            hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
+            sinh_viens = SinhVien.objects.filter(lop__khoa=khoa)  # Get all students in the department
+            diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
+            serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Khoa.DoesNotExist:
+            return Response({'error': 'Khoa không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except HocKy_NamHoc.DoesNotExist:
+            return Response({'error': 'Học kỳ năm học không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

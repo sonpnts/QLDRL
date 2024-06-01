@@ -20,9 +20,10 @@ r.register('thamgias', views.ThamGiaViewSet, basename='Tham Gia')
 r.register('minhchungs', views.MinhChungViewSet, basename='Minh Chứng')
 r.register('send_mail', send_mail.SendEmailViewSet, basename='send_mail')
 urlpatterns = [
-    path('bao-cao-lop/<int:id_lop>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewLop.as_view(), name='Báo cáo theo lớp'),
-    path('bao-cao-khoa/<int:id_khoa>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewKhoa.as_view(), name='Báo cáo theo khoa'),
-    # path('bao-cao/<int:id_lop>/<int:id_hoc_ky>/', views.BaoCaoView.as_view(), name='bao_cao'),
-    # path('bao-cao/<int:id_lop>/<int:id_hoc_ky>/', views.ExportBaoCaoView.as_view(), name='bao_cao'),
+    path('bao-cao-lop/<int:id_lop>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewLop.as_view(), name='Báo cáo theo lớp xuất file'),
+    path('bao-cao-khoa/<int:id_khoa>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewKhoa.as_view(), name='Báo cáo theo khoa xuất file'),
+    path('thong-ke-lop/<int:id_lop>/<int:id_hoc_ky>/', views.BaoCaoViewLop.as_view(), name='Thống kê theo lớp'),
+    path('thong-ke-khoa/<int:id_khoa>/<int:id_hoc_ky>/', views.BaoCaoViewKhoa.as_view(), name='Thống kê theo khoa'),
+
     path('', include(r.urls))
 ]
