@@ -225,8 +225,7 @@ class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Upda
 
     @action(methods=['get'], url_path="comments", detail=True)
     def get_comments(self, request, pk):
-        comments = self.get_object().comment_set.select_related('tai_khoan').all()
-
+        comments = Comment.objects.filter(bai_viet=pk)
         paginator = paginators.CommentPaginator()
         page = paginator.paginate_queryset(comments, request)
         if page is not None:
@@ -236,7 +235,7 @@ class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Upda
         return Response(serializers.CommentSerializer(comments, many=True).data,
                         status=status.HTTP_200_OK)
 
-    @action(methods=['post'], url_path="comments", detail=True)
+    @action(methods=['post'], url_path="comment", detail=True)
     def add_comment(self, request, pk):
         c = Comment.objects.create(tai_khoan=request.user, bai_viet=self.get_object(), content=request.data.get('content'))
 
@@ -253,7 +252,14 @@ class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Upda
         return Response(
             serializers.AuthenticatedBaiVietTagSerializer(self.get_object(), context={'request': request}).data, status=status.HTTP_201_CREATED)
 
-
+    @action(methods=['get'], detail=True, url_path='liked')
+    def check_like_status(self, request, pk=None):
+        bai_viet = self.get_object()
+        user = request.user
+        liked = Like.objects.filter(bai_viet=bai_viet, tai_khoan=user, active=1).exists()
+        if not liked:
+            return Response({'liked': False}, status=status.HTTP_200_OK)
+        return Response({'liked': True }, status=status.HTTP_200_OK)
 
 
     @action(methods=['get'], url_path='tac_gia', detail=True)
@@ -313,7 +319,19 @@ class TagViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAP
 class CommentViewset(viewsets.ViewSet, generics.CreateAPIView, generics.DestroyAPIView, generics.UpdateAPIView):
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
-    permission_classes = [perms.CommentOwner]
+
+
+    # def get_permissions(self):
+    #     if self.action in ['get']:
+    #         return [permissions.IsAuthenticated()]
+    #     else:
+    #         return [perms.CommentOwner]
+
+    @action(methods=['get'], url_path='tac_gia', detail=True)
+    def get_tacgia(self, request, pk):
+        comment = self.queryset.get(pk=pk)
+        tacgia = comment.tai_khoan
+        return Response(serializers.TaiKhoanSerializer(tacgia).data, status=status.HTTP_200_OK)
 
 
 class DiemRenLuyenViewset(viewsets.ViewSet, generics.ListCreateAPIView, generics.DestroyAPIView,
@@ -364,7 +382,7 @@ class DiemRenLuyenViewset(viewsets.ViewSet, generics.ListCreateAPIView, generics
         return queryset
 
 
-class ThamGiaViewSet(viewsets.ViewSet, generics.ListAPIView):
+class ThamGiaViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = ThamGia.objects.all()
     serializer_class = serializers.ThamGiaSerializer
 
@@ -394,6 +412,36 @@ class ThamGiaViewSet(viewsets.ViewSet, generics.ListAPIView):
         minhchung = MinhChung.objects.filter(tham_gia=thamgia)
         return Response(serializers.MinhChungSerializer(minhchung, many=True).data,
                         status=status.HTTP_200_OK)
+
+
+    @action(methods=['post'], url_path='dang-ky-hoat-dong', detail=True)
+    def dangkyhoatdong(self, request, pk=None):
+        data = request.data.copy()
+        hd_ngoaikhoa = HoatDongNgoaiKhoa.objects.get(id=pk)
+        sinh_vien = SinhVien.objects.get(email=request.user.email)
+        tham_gia = ThamGia.objects.create(
+            sinh_vien=sinh_vien,
+            hd_ngoaikhoa=hd_ngoaikhoa,
+            trang_thai=ThamGia.TrangThai.DangKy
+        )
+
+        serializer = self.serializer_class(tham_gia)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'], detail=True, url_path='kiem-tra-dang-ky')
+    def check_registration_status(self, request, pk=None):
+
+        # Lấy thông tin sinh viên từ request.user
+        sinh_vien = SinhVien.objects.get(email=request.user.email)
+
+        # Kiểm tra xem sinh viên đã đăng ký hoạt động này chưa
+        registered = ThamGia.objects.filter(hd_ngoaikhoa=pk, sinh_vien=sinh_vien).exists()
+
+        # Trả về phản hồi tùy thuộc vào trạng thái đăng ký
+        if not registered:
+            return Response({'registered': False}, status=status.HTTP_200_OK)
+        return Response({'registered': True}, status=status.HTTP_200_OK)
+
 
 
 class MinhChungViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
@@ -478,6 +526,8 @@ class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateA
     serializer_class = serializers.SinhVienSerializer
     pagination_class = paginators.SinhVienPaginator
     queryset = SinhVien.objects.all()
+
+
     def get_permissions(self):
         if self.action == "sinhvien_is_valid":
             return [permissions.AllowAny()]
@@ -519,19 +569,6 @@ class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateA
 
 
 class ExportBaoCaoViewLop(APIView):
-
-    # def get_students(self, id_lop, id_hoc_ky):
-    #     try:
-    #         lop = Lop.objects.get(pk=id_lop)
-    #         khoa = Khoa.objects.get(pk=lop.khoa_id)
-    #         hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
-    #         sinh_viens = lop.sinhvien_set.all()
-    #         diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
-    #         return sinh_viens, diem_ren_luyen, lop, khoa, hoc_ky_nam_hoc
-    #     except Lop.DoesNotExist:
-    #         raise ValueError('Lớp không tồn tại')
-    #     except HocKy_NamHoc.DoesNotExist:
-    #         raise ValueError('Học kỳ năm học không tồn tại')
 
 
     def get(self, request, id_lop, id_hoc_ky, id_format):

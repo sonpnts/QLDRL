@@ -5,13 +5,12 @@ import { TextInput as PaperTextInput, Title, Button as PaperButton } from "react
 import APIs, { endpoints, authAPI } from "../../configs/APIs";
 import MyContext from "../../configs/MyContext";
 import Styles from "./Styles";
-
-
+import { set } from "firebase/database";
 
 const DangNhap = ({ navigation }) => {
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
-    const [user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole] = useContext(MyContext);
+    const [user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole, setUser] = useContext(MyContext);
 
     const login = async () => {
         try {
@@ -39,11 +38,12 @@ const DangNhap = ({ navigation }) => {
             });
             console.log(user.data.role);
             let user_role = user.data.role;
+            setUser(user.data);
             setRole(user_role);
             setIsAuthenticated(true);
 
         } catch (ex) {
-            console.error(ex);
+            console.error("Lỗi tại màn hình đăng nhập:",ex);
             
         }
     };

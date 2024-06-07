@@ -113,10 +113,11 @@ class ThamGia(models.Model):
         DangKy = 0, 'Đăng Ký'
         DiemDanh = 1, 'Điểm Danh'
         BaoThieu = 2, 'Báo Thiếu'
+        KhongHopLy= 3, 'Không Hợp Lý'
 
     trang_thai = models.IntegerField(choices=TrangThai, null=True)
     ngay_dang_ky = models.DateTimeField(auto_now_add=True)
-    ngay_diem_danh = models.DateTimeField(auto_now=True)
+    ngay_diem_danh = models.DateTimeField(default=None, null=True)
 
     def __str__(self):
         return f"{self.sinh_vien.mssv} - {self.hd_ngoaikhoa.ten_HD_NgoaiKhoa}"

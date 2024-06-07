@@ -9,14 +9,16 @@ import OTP from '../TaiKhoan/OTP';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import MyContext from '../../configs/MyContext';
+import ChatScreen from '../ChatFireBase/ChatScreen';
+import UserInfo from '../TaiKhoan/TaiKhoan';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => (
     <Stack.Navigator initialRouteName="OTP">
-        <Stack.Screen name="OTP" component={OTP} />
-        {/* Thêm các màn hình khác nếu cần */}
+        {/* <Stack.Screen name="OTP" component={OTP} /> */}
+        <Stack.Screen name="Thông tin tài khoản" component={UserInfo}/>
     </Stack.Navigator>
 );
 
@@ -79,6 +81,19 @@ const Main = ({ navigation }) => {
                     },
                 }}
             />
+            {/* <Tab.Screen
+            name="ChatScreen"
+            options={{
+                tabBarLabel: 'Nhắn tin',
+                tabBarIcon: ({ color, size }) => {
+                    return <Icon name="message" size={size} color={color} />;
+                },
+                }}
+            >
+                {() => <ChatScreen user={user} />}
+                
+            </Tab.Screen> */}
+
             {role == 1 && <Tab.Screen
                 
                 name="OTP"
@@ -101,15 +116,17 @@ const Main = ({ navigation }) => {
                 }}
             />}
             <Tab.Screen
-                name="Stack"
+                name="Thông tin tài khoản"
                 component={StackNavigator}
                 options={{
-                    tabBarLabel: 'Stack',
+                    tabBarLabel: 'Tài khoản',
                     tabBarIcon: ({ color, size }) => {
-                        return <Icon name="cog" size={size} color={color} />;
+                        return <Icon name="account" size={size} color={color} />;
                     },
                 }}
             />
+
+
         </Tab.Navigator>
     )
 }

@@ -12,12 +12,13 @@ const BanTin = ({ route, navigation }) => {
         try {
             const token = await AsyncStorage.getItem('access-token');
             if (token) {
-                console.log("Token ", token);
+                console.log("Token để lấy bài viết", token);
                 let baiviets = await authAPI(token).get(endpoints['bai_viet']);
                 setBaiViets(baiviets.data);
+                
             }
         } catch (ex) {
-            console.log("Lỗi");
+            console.log("Lỗi", ex);
         }
     }
     React.useEffect(() => {
@@ -37,6 +38,8 @@ const BanTin = ({ route, navigation }) => {
                                 <BaiViet
                                     key={b.id}
                                     baiviet={b}
+                                    // route={route}
+                                    navigation={navigation}
                                 />
                             );
                         })}

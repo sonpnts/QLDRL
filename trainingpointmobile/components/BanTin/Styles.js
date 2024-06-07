@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+
 export default StyleSheet.create({
     container: {
         flex: 1,
@@ -38,10 +39,10 @@ export default StyleSheet.create({
         fontWeight: 'bold',
     },
     hashtag: {
-        fontSize: 16,
+        fontSize: 15,
         marginBottom: 10,
         alignSelf: "flex-start",
-        color: "lightblue",
+        color: "green",
         fontWeight: 'bold',
     },
     title: {
@@ -56,7 +57,8 @@ export default StyleSheet.create({
         marginBottom: 10,
     },
     content: {
-        fontSize: 16,
+        width: "80%",
+        fontSize: 18,
         lineHeight: 24,
         marginBottom: 10,
     },
@@ -71,4 +73,49 @@ export default StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    modalBackground: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    },
+    modalContainer: {
+        width: '85%',
+        backgroundColor: 'white',
+        height: '70%',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        marginBottom: '5%',
+    },
+    commentContainer: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+        width: '100%', // Ensure comment containers are full width
+    },
+    commentAuthor: {
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    commentContent: {
+        fontSize: 16,
+    },
+    textInput: {
+        width: '100%',
+        padding: 20,
+        fontSize: 16,
+        backgroundColor: '#fff',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginTop: 10,
+    },
+    buttoncomment: {
+        flex: 1,
+        marginHorizontal: 5,
+    }
 });

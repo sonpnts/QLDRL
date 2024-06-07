@@ -1,11 +1,12 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-    container: {
-        flex: 1,
-        marginTop: 20,
-        padding: 20
-    }, subject: {
+    // container: {
+    //     flex: 1,
+    //     marginTop: 20,
+    //     padding: 20
+    // }, 
+    subject: {
         fontSize: 30,
         fontWeight: "bold",
     }, row: {
@@ -39,6 +40,35 @@ export default StyleSheet.create({
         color: 'red',
         marginBottom: 10,
         marginLeft: 10,
+    },
+    container: {
+        flex: 1,
+        marginTop: 20,
+        padding: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f5f5f5',
+    },
+    card: {
+        width: '90%',
+        marginVertical: 20,
+    },
+    cardContent: {
+        alignItems: 'center',
+    },
+    title: {
+        marginTop: 10,
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    caption: {
+        fontSize: 16,
+        color: '#777',
+    },
+    button: {
+        marginTop: 20,
+        paddingHorizontal: 40,
+        paddingVertical: 10,
     },
 
 });

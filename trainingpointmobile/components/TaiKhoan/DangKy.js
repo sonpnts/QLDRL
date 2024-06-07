@@ -242,5 +242,4 @@ const DangKy = ({ route, navigation }) => {
         </ScrollView>
     );
 };
-
 export default DangKy;

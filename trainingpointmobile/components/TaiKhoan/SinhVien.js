@@ -7,7 +7,7 @@ import Styles from './Styles';
 import { Picker } from '@react-native-picker/picker';
 
 
-const SinhVienDangKy = ({ route, navigation }) => {
+const SinhVienDangKy = ({ ruote, navigation }) => {
     const [sv, setSv] = useState({
         "email": "",
         "ho_ten": "",

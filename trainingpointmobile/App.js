@@ -15,6 +15,7 @@ import BaiViet from './components/BanTin/BaiViet';
 import DangXuat from './components/TaiKhoan/DangXuat';
 import SinhVienDangKy from './components/TaiKhoan/SinhVien';
 import ExportBaoCao from './components/ThongKe/export';
+import ChatScreen from './components/ChatFireBase/ChatScreen';
 
 
 
@@ -49,7 +50,7 @@ export default function App({ navigation }) {
         console.log('Không tìm thấy token trong AsyncStorage');
       }
     } catch (ex) {
-      console.log(ex)
+      console.log("Lỗi",ex)
     }
   };
   
@@ -72,6 +73,7 @@ export default function App({ navigation }) {
           <Stack.Screen name="SinhVienDangKy" component={SinhVienDangKy} />
           <Stack.Screen name="ThemTaiKhoanTroLy" component={ThemTroLySinhVien} />
           <Stack.Screen name="ExportBaoCao" component={ExportBaoCao} />
+          <Stack.Screen name="Chat" component={ChatScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </MyContext.Provider>

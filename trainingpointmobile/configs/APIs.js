@@ -18,9 +18,15 @@ export const endpoints = {
     'khoa': '/khoas/',
     'bai_viet': '/baiviets/',
     'bao-cao': '/bao-cao/',
+    'binh_luan': (bai_viet_id) => `/baiviets/${bai_viet_id}/comment/`,
+    'owner_binh_luan':(com_id) => `/comments/${com_id}/tac_gia/`,
+    'lay_binh_luan': (bai_viet_id) => `/baiviets/${bai_viet_id}/comments/`,
     'baiviet_tag': (bai_viet_id) => `/baiviets/${bai_viet_id}/tags/`,
     'tac_gia': (bai_viet_id) => `/baiviets/${bai_viet_id}/tac_gia/`,
     'baiviet_like': (bai_viet_id) => `/baiviets/${bai_viet_id}/like/`,
+    'baiviet_liked': (bai_viet_id) => `/baiviets/${bai_viet_id}/liked/`,
+    'dang_ky_hoat_dong':(hoat_dong_id) => `/thamgias/${hoat_dong_id}/dang-ky-hoat-dong/`,
+    'kiem_tra_dang_ky':(hoat_dong_id) => `/thamgias/${hoat_dong_id}/kiem-tra-dang-ky/`,
 }
 
 export const authAPI = (accessToken) => axios.create({
