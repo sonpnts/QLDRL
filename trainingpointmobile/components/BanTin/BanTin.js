@@ -12,7 +12,6 @@ const BanTin = ({ route, navigation }) => {
         try {
             const token = await AsyncStorage.getItem('access-token');
             if (token) {
-                console.log("Token để lấy bài viết", token);
                 let baiviets = await authAPI(token).get(endpoints['bai_viet']);
                 setBaiViets(baiviets.data);
                 

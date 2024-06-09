@@ -37,6 +37,25 @@
 	<array>
 		<string>arm64</string>
 	</array>
+
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>ms-word</string>
+		<string>ms-word-secure</string>
+		<string>ms-powerpoint</string>
+		<string>ms-powerpoint-secure</string>
+		<string>ms-excel</string>
+		<string>ms-excel-secure</string>
+	</array>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to upload files.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to take pictures.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We need access to your microphone to record audio.</string>
+
+
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleDefault</string>
 	<key>UISupportedInterfaceOrientations</key>

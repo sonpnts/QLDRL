@@ -28,7 +28,8 @@ const CommentModal = ({ visible, onClose, postId }) => {
     const fetchComments = async () => {
         try {
             const response = await APIs.get(endpoints['lay_binh_luan'](postId));
-            const fetchedComments = response.data.results;
+            // const fetchedComments = response.data.results;
+            const fetchedComments = response.data;
             const updatedComments = await Promise.all(fetchedComments.map(async (c) => {
                 const author = await getAuthor(c.id);
                 return { ...c, author: author ? author.username : "Unknown" };
@@ -38,7 +39,7 @@ const CommentModal = ({ visible, onClose, postId }) => {
 
             setComments(updatedComments);
             
-            console.log(response.data.results);
+            // console.log(response.data.results);
         } catch (error) {
             console.error('Error fetching comments:', error);
         }

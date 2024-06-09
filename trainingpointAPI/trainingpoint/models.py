@@ -19,8 +19,6 @@ class TaiKhoan(AbstractUser):
         return self.username
 
 
-
-
 class BaseModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -87,7 +85,7 @@ class HocKy_NamHoc(models.Model):
 class Dieu(BaseModel):
     ma_dieu = models.CharField(max_length=10, unique=True)
     ten_dieu = models.CharField(max_length=255)
-    # diem_toi_da = models.IntegerField()
+    diem_toi_da = models.IntegerField()
     def __str__(self):
         return self.ten_dieu
 

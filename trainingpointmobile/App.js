@@ -16,7 +16,7 @@ import DangXuat from './components/TaiKhoan/DangXuat';
 import SinhVienDangKy from './components/TaiKhoan/SinhVien';
 import ExportBaoCao from './components/ThongKe/export';
 import ChatScreen from './components/ChatFireBase/ChatScreen';
-
+import DiemDanh from './components/ThongKe/TestUploadFile';
 
 
 const Stack = createNativeStackNavigator();
@@ -28,10 +28,7 @@ export default function App({ navigation }) {
   const [role, setRole] = React.useState();
 
   // Hàm chuyển đổi định dạng ngày từ yyyy-MM-dd sang dd/MM/yyyy
-  const formatDate = (dateString) => {
-    const [year, month, day] = dateString.split('-');
-    return `${day}/${month}/${year}`;
-  };
+
 
   const getAccessToken = async () => {
     try {
@@ -56,7 +53,7 @@ export default function App({ navigation }) {
   
   React.useEffect(() => {
     getAccessToken();
-    console.log(isAuthenticated);
+    // console.log(isAuthenticated);
   }, []);
 
   return (
@@ -74,6 +71,7 @@ export default function App({ navigation }) {
           <Stack.Screen name="ThemTaiKhoanTroLy" component={ThemTroLySinhVien} />
           <Stack.Screen name="ExportBaoCao" component={ExportBaoCao} />
           <Stack.Screen name="Chat" component={ChatScreen} />
+          <Stack.Screen name="DiemDanh" component={DiemDanh} />
         </Stack.Navigator>
       </NavigationContainer>
     </MyContext.Provider>

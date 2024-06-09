@@ -11,16 +11,17 @@ import React from 'react';
 import MyContext from '../../configs/MyContext';
 import ChatScreen from '../ChatFireBase/ChatScreen';
 import UserInfo from '../TaiKhoan/TaiKhoan';
-
+// import DiemDanh from '../TroLySinhVien/TestUploadFile';
+import DiemDanh from '../ThongKe/TestUploadFile';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const StackNavigator = () => (
-    <Stack.Navigator initialRouteName="OTP">
-        {/* <Stack.Screen name="OTP" component={OTP} /> */}
-        <Stack.Screen name="Thông tin tài khoản" component={UserInfo}/>
-    </Stack.Navigator>
-);
+// const StackNavigator = () => (
+//     <Stack.Navigator initialRouteName="OTP">
+//         {/* <Stack.Screen name="OTP" component={OTP} /> */}
+//         <Stack.Screen name="Thông tin tài khoản" component={UserInfo}/>
+//     </Stack.Navigator>
+// );
 
 const Main = ({ navigation }) => {
     const [user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole] = React.useContext(MyContext);
@@ -81,6 +82,19 @@ const Main = ({ navigation }) => {
                     },
                 }}
             />
+
+            <Tab.Screen
+                name="DiemDanh"
+                component={DiemDanh}
+                options={{
+                    tabBarLabel: 'Bản tin',
+                    tabBarIcon: ({ color, size }) => {
+                        return <Icon name="book" size={size} color={color} />;
+                    },
+                }}
+            />
+            
+
             {/* <Tab.Screen
             name="ChatScreen"
             options={{
@@ -117,7 +131,7 @@ const Main = ({ navigation }) => {
             />}
             <Tab.Screen
                 name="Thông tin tài khoản"
-                component={StackNavigator}
+                component={UserInfo}
                 options={{
                     tabBarLabel: 'Tài khoản',
                     tabBarIcon: ({ color, size }) => {

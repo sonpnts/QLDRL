@@ -2,6 +2,10 @@ import axios from "axios";
 
 export const BASE_URL = 'http://192.168.1.218:8000/';
 
+export const formatDate = (dateString) => {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
 
 // const BASE_URL = 'https://sonpnts.pythonanywhere.com/'
 
@@ -9,11 +13,14 @@ export const endpoints = {
 
     'dang_ky': '/taikhoans/',
     'dang_nhap': '/o/token/',
+    'hocky': '/hockinamhocs/',
+    'diemdanh': '/upload-diem-danh/',
     'current_taikhoan': '/taikhoans/current-taikhoan/',
     'tai_khoan_is_valid': '/taikhoans/is_valid/',
     'sinh_vien_is_valid': '/sinhviens/is_valid/',
     'lop': '/lops/',
     'sinh_vien': '/sinhviens/',
+    'current_sinhvien': '/sinhviens/current-sinhvien/',
     'send_mail': '/send_mail/',
     'khoa': '/khoas/',
     'bai_viet': '/baiviets/',

@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'cloudinary',
     'drf_yasg',
 
-
 ]
 
 CKEDITOR_UPLOAD_PATH = "ckeditors/images"

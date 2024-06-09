@@ -19,11 +19,14 @@ r.register('diemrenluyens', views.DiemRenLuyenViewset, basename='Điểm Rèn Lu
 r.register('thamgias', views.ThamGiaViewSet, basename='Tham Gia')
 r.register('minhchungs', views.MinhChungViewSet, basename='Minh Chứng')
 r.register('send_mail', send_mail.SendEmailViewSet, basename='send_mail')
+r.register('hockinamhocs', views.HocKyNamHocViewset, basename='hockinamhocs')
 urlpatterns = [
     path('bao-cao-lop/<int:id_lop>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewLop.as_view(), name='Báo cáo theo lớp xuất file'),
     path('bao-cao-khoa/<int:id_khoa>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewKhoa.as_view(), name='Báo cáo theo khoa xuất file'),
     path('thong-ke-lop/<int:id_lop>/<int:id_hoc_ky>/', views.BaoCaoViewLop.as_view(), name='Thống kê theo lớp'),
     path('thong-ke-khoa/<int:id_khoa>/<int:id_hoc_ky>/', views.BaoCaoViewKhoa.as_view(), name='Thống kê theo khoa'),
+    path('tinh-diem-ren-luyen/<int:sinhvien_id>/<int:hk_id>/',views.CalculateDiemRenLuyen.as_view(), name='Tính điểm rèn luyện'),
+    path('upload-diem-danh/<int:hoc_ky_id>/<int:hd_ngoaikhoa_id>/', views.UploadFileDiemDanh.as_view(), name='Upload điểm danh'),
 
     path('', include(r.urls))
 ]

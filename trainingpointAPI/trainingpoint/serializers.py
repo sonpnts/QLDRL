@@ -36,7 +36,6 @@ class TaiKhoanSerializer(serializers.ModelSerializer):
             }
         }
 
-
     def to_representation(self, instance):
         req = super().to_representation(instance)
         req['avatar'] = instance.avatar.url
@@ -49,7 +48,6 @@ class TaiKhoanSerializer(serializers.ModelSerializer):
 
         taiKhoan.save()
 
-
         return taiKhoan
 
 
@@ -61,8 +59,6 @@ class ItemSerializer(serializers.ModelSerializer):  # Minh chứng, tài khoản
         rep['image'] = instance.image.url
 
         return rep
-
-
 
 
 
@@ -153,6 +149,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class DiemRenLuyenSerializer(serializers.ModelSerializer):
+
+
     class Meta:
         model = DiemRenLuyen
         fields = '__all__'
@@ -185,3 +183,7 @@ class AuthenticatedBaiVietTagSerializer(BaivietTagSerializer):
     class Meta:
         model = BaivietTagSerializer.Meta.model
         fields = BaivietTagSerializer.Meta.fields + ['liked']
+
+
+class UploadFileDiemDanhSerializer(serializers.Serializer):
+    file = serializers.FileField()

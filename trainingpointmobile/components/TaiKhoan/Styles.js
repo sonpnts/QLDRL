@@ -1,11 +1,11 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-    // container: {
-    //     flex: 1,
-    //     marginTop: 20,
-    //     padding: 20
-    // }, 
+    containerlogin: {
+        flex: 1,
+        marginTop: 20,
+        padding: 20
+    }, 
     subject: {
         fontSize: 30,
         fontWeight: "bold",
@@ -69,6 +69,13 @@ export default StyleSheet.create({
         marginTop: 20,
         paddingHorizontal: 40,
         paddingVertical: 10,
+    },
+    input: {
+        marginBottom: 10,
+        width: '100%',
+    },
+    avatar: {
+        marginBottom: 50,
     },
 
 });
