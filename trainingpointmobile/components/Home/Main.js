@@ -84,16 +84,16 @@ const Main = ({ navigation }) => {
                 }}
             />
 
-            {/* <Tab.Screen
-                name="DiemDanh"
-                component={DiemDanh}
+            <Tab.Screen
+                name="Nhắn tin"
+                component={ChatScreen}
                 options={{
-                    tabBarLabel: 'Upload file điểm danh',
+                    tabBarLabel: 'Nhắn tin',
                     tabBarIcon: ({ color, size }) => {
-                        return <Icon name="book" size={size} color={color} />;
+                        return <Icon name="message" size={size} color={color} />;
                     },
                 }}
-            /> */}
+            />
 
             
             {/* <Tab.Screen

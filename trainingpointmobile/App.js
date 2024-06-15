@@ -22,24 +22,73 @@ import HoatDong from './components/TroLySinhVien/HoatDong';
 import HoatDongChuaCoBaiViet from './components/TroLySinhVien/DanhSanhHoatDong';
 import QuanLyHoatDong from './components/TroLySinhVien/QuanLyCacHoatDong';
 import SuaHoatDong from './components/TroLySinhVien/SuaHoatDong';
+import { signInWithCustomToken } from 'firebase/auth';
+import { auth } from './configs/firebase'; 
 
 
 const Stack = createNativeStackNavigator();
+
+// import firebase from './configs/firebase'
+import firebase from 'firebase/app';
+
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+
+// // Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDGIHD-_vTT_S2d3_N13EPkcjJ-9Urt7Z4",
+  authDomain: "qldrl-77e59.firebaseapp.com",
+  projectId: "qldrl-77e59",
+  storageBucket: "qldrl-77e59.appspot.com",
+  messagingSenderId: "694590271865",
+  appId: "1:694590271865:web:e9186657367b4b1e6b3fa8"
+};
+
+
 
 
 export default function App({ navigation }) {
   const [user, dispatch] = React.useReducer(MyUserReducer, null);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [role, setRole] = React.useState();
+  const [authfire,setAuthfire] = React.useState(false);
 
   // Hàm chuyển đổi định dạng ngày từ yyyy-MM-dd sang dd/MM/yyyy
+
+
+
+  const getFireBaseToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem('firebase-token');
+      if (token !== null) {
+        // console.log('Token firebase trong appjs:', token);
+        signInWithCustomToken(auth, token)
+          .then((userCredential) => {
+            // Đăng nhập thành công, userCredential.user sẽ chứa thông tin người dùng
+            const user = userCredential.user;
+            setAuthfire(true);
+            console.log('User logged in:', user.uid);
+          })
+        .catch((error) => {
+          // Xử lý lỗi đăng nhập
+          console.error('Error signing in:', error);
+        });
+      } else {
+        console.log('Không tìm thấy token trong AsyncStorage');
+      }
+    }
+    catch (ex) {
+      console.log("Lỗi",ex)
+    }
+  };
 
 
   const getAccessToken = async () => {
     try {
       const token = await AsyncStorage.getItem('access-token');
       if (token !== null) {
-        console.log('Token:', token);
+        // console.log('Token trong app.js:', token);
         let user = await authAPI(token).get(endpoints['current_taikhoan']);
         console.log(user.data);
         dispatch({
@@ -58,7 +107,7 @@ export default function App({ navigation }) {
   
   React.useEffect(() => {
     getAccessToken();
-    // console.log(isAuthenticated);
+    getFireBaseToken();
   }, []);
 
   return (
@@ -75,7 +124,7 @@ export default function App({ navigation }) {
           <Stack.Screen name="SinhVienDangKy" component={SinhVienDangKy} options={{ title: 'Sinh viên đăng ký' }} />
           <Stack.Screen name="ThemTaiKhoanTroLy" component={ThemTroLySinhVien} options={{ title: 'Thêm tài khoản trợ lý' }} />
           <Stack.Screen name="ExportBaoCao" component={ExportBaoCao} options={{ title: 'Xuất báo cáo' }} />
-          <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+          <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Nhắn tin' }} />
           <Stack.Screen name="DiemDanh" component={DiemDanh} options={{ title: 'Điểm danh' }} />
           <Stack.Screen name="CreatePost" component={CreatePost} options={{ title: 'Tạo bài viết' }} />
           <Stack.Screen name="HoatDong" component={HoatDong} options={{ title: 'Hoạt động' }} />

@@ -49,6 +49,8 @@ export const endpoints = {
     'tai_khoan_is_valid': '/taikhoans/is_valid/',
     'tao_hoat_dong': '/hoatdongs/',
     'tro_ly': '/trolysinhviens/',
+    'firebase':'taikhoans/firebase/',
+    'get_khoa':'/taikhoans/khoa/',
 
 }
 

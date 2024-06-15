@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from unidecode import unidecode
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from rest_framework import viewsets, generics, status, parsers, permissions, exceptions
 from rest_framework.decorators import action
@@ -20,7 +20,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Frame
 from reportlab.lib import colors
-
+from firebase_admin import auth as firebase_auth
 
 
 
@@ -301,7 +301,7 @@ class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet,
     queryset = HoatDongNgoaiKhoa.objects.filter(active=True)
     serializer_class = serializers.HoatDongNgoaiKhoaSerializer
     # lookup_field = 'pk'
-
+    #
     def get_queryset(self):
         queryset = self.queryset
         #if self.action == 'list':
@@ -352,7 +352,6 @@ class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet,
 
     @action(methods=['get'], url_path='quanly', detail=False)
     def get_hdnk_quanly(self, request):
-        # Chỉ điểm danh các hoạt động được tổ chức bởi khoa mình, không được điểm danh các hoạt được tổ chức bởi khoa khác
         try:
             hk = self.request.query_params.get('hoc_ky')
             troly = TaiKhoan.objects.get(username=request.user.username);
@@ -360,7 +359,7 @@ class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet,
             troly_list = TroLySinhVien_Khoa.objects.filter(khoa=khoa).values_list('trolySV', flat=True)
             hoatdong = HoatDongNgoaiKhoa.objects.filter(hk_nh__hoc_ky=hk, tro_ly__in=troly_list, active=True)
 
-            # hoatdong_chua_co_baiviet = hoatdong.exclude(id__in=BaiViet.objects.values('hd_ngoaikhoa__id'))
+
 
             if not hoatdong.exists():
                 return Response({"message": "No activities found for the specified assistant and semester"},
@@ -444,12 +443,6 @@ class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet,
         return Response(serializers.ThamGiaSerializer(thamgias, many=True).data,
                         status=status.HTTP_200_OK)
 
-
-    def create(self, request, *args, **kwargs):
-        data = request.data.copy()
-        data['tro_ly'] = TaiKhoan.objects.get(username=request.user.username).id
-        hd = HoatDongNgoaiKhoa.objects.create(**data)
-        return Response(serializers.HoatDongNgoaiKhoaSerializer(hd).data, status=status.HTTP_201_CREATED)
 
 class LopViewSet(viewsets.ViewSet,generics.ListAPIView):
     queryset = Lop.objects.filter(active=True)
@@ -543,10 +536,11 @@ class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
     serializer_class = serializers.TaiKhoanSerializer
     # parser_classes = [parsers.MultiPartParser]
 
+
     def get_permissions(self):
-        if self.action in ['taikhoan_is_valid']:
+        if self.action in ['taikhoan_is_valid', 'login_firebase', 'khoa']:
             return [permissions.AllowAny()]
-        if self.action in ['get_current_user','PATCH']:
+        if self.action in ['get_current_user','partial_update']:
             return [permissions.IsAuthenticated()]
         elif self.action == "create":
             if isinstance(self.request.user, AnonymousUser):
@@ -565,9 +559,6 @@ class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
                     return [permissions.IsAuthenticated()]
                 else:
                     raise exceptions.PermissionDenied()
-        # elif self.action == "get_tac_gia":
-        #     if self.request.data.get('role') == str(TaiKhoan.Roles.TroLySinhVien, TaiKhoan.Roles.CongTacSinhVien):
-        #         return [permissions.IsAuthenticated()]
 
 
     @action(methods=['get', 'patch'], url_path='current-taikhoan', detail=False)
@@ -598,38 +589,31 @@ class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
         return Response(data={'is_valid': "False"}, status=status.HTTP_200_OK)
 
-# class TagViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
-#     queryset = Tag.objects.all()
-#     serializer_class = serializers.TagSerializier
-#
-#     def get_permissions(self):
-#         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-#             if isinstance(self.request.user, AnonymousUser):
-#                 return [permissions.IsAuthenticated()]
-#             else:
-#                 if (self.request.user.is_authenticated and
-#                         self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
-#                                                    TaiKhoan.Roles.TroLySinhVien.value,
-#                                                    TaiKhoan.Roles.ADMIN.value]):
-#                     return [permissions.IsAuthenticated()]
-#                 else:
-#                     raise exceptions.PermissionDenied()
-#
-#         return [permissions.AllowAny()]
-#
-#     def get_queryset(self):
-#         queryset = self.queryset
-#         q = self.request.query_params.get("q")
-#         if q:
-#             queryset = queryset.filter(name__icontains=q)
-#
-#         return queryset
-#
-#     @action(methods=['get'], url_path='baiviets', detail=True)
-#     def get_baiviet(self, request, pk):
-#         baiviet = self.get_object().baiviets.all()
-#         return Response(serializers.BaiVietSerializer(baiviet, many=True).data,
-#                         status=status.HTTP_200_OK)
+
+    @action(methods=['get'], url_path='firebase', detail=False)
+    def login_firebase(self, request):
+        user = TaiKhoan.objects.get(username=request.user.username)
+        if user is not None:
+            # Tạo Firebase token tùy chỉnh
+            custom_token = firebase_auth.create_custom_token(str(user.id))
+            custom_token_str = custom_token.decode('utf-8')
+            return JsonResponse({'token': custom_token_str})
+        else:
+            return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+    @action(methods=['get'], url_path='khoa', detail=False)
+    def khoa(self, request):
+        user = TaiKhoan.objects.get(username=request.user.username)
+        if user:
+            if user.role == TaiKhoan.Roles.TroLySinhVien:
+                khoa = TroLySinhVien_Khoa.objects.get(trolySV=user).khoa
+                return Response(serializers.KhoaSerializer(khoa).data, status=status.HTTP_200_OK)
+            elif user.role == TaiKhoan.Roles.SinhVien:
+                khoa = SinhVien.objects.get(email=request.user.email).lop.khoa
+                return Response(serializers.KhoaSerializer(khoa).data, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Không tìm thấy khoa'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class TroLySinhVienKhoaViewset(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = TroLySinhVien_Khoa.objects.all()
@@ -667,6 +651,8 @@ class TroLySinhVienKhoaViewset(viewsets.ViewSet, generics.ListAPIView, generics.
 
         return Response(serializers.SinhVienSerializer(troly, many=True).data,
                         status=status.HTTP_200_OK)
+
+
 
 
 class ThamGiaViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView):

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import pymysql
 
@@ -152,6 +153,21 @@ CLIENT_SECRET = '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'
 client_id: "nBF09WIbpiMhXA0AC1CyUtmZ4UrapK9C2T73CM8v"
 client_secret: "flUMi37JgPmzr3rQMqbpRozri4lVdhzJ33ffXAl47cVoJqnShG8gfPCuTVvPsGFmYstjovkzTG9yY2IFGxWlGD2I0Q0f5yxx5NEYMgfGtdnxDHaEhd60MU43cQlV6kyx"
 
+
+# FIREBASE_ADMIN_PATH = os.path.join(BASE_DIR, 'trainingpoint/firebase/qldrl-77e59-firebase-adminsdk-6tt21-9c80f40850.json')
+
+
+import firebase_admin
+from firebase_admin import credentials
+firebase_credentials_path = os.path.join(BASE_DIR, 'trainingpoint/firebase/qldrl-77e59-firebase-adminsdk-6tt21-9c80f40850.json')
+
+
+if not firebase_credentials_path:
+    raise ValueError('Missing FIREBASE_ADMINSDK_JSON environment variable.')
+
+# Khởi tạo Firebase Admin SDK với tệp JSON khóa dịch vụ
+cred = credentials.Certificate(firebase_credentials_path)
+firebase_admin.initialize_app(cred)
 
 # CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ALLOW_CREDENTIALS = True

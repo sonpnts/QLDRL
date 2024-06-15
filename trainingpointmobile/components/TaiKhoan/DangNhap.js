@@ -27,6 +27,8 @@ const DangNhap = ({ navigation }) => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+
+            
             console.info(res.data)
 
             await AsyncStorage.setItem('access-token', res.data.access_token)
@@ -36,6 +38,14 @@ const DangNhap = ({ navigation }) => {
                 "type": "login",
                 "payload": user.data
             });
+            let firebase = await APIs.get(endpoints['firebase'], {
+                headers: {
+                    Authorization: `Bearer ${res.data.access_token}`,
+                  },
+            });
+            
+            await AsyncStorage.setItem('firebase-token', firebase.data.token)
+           
             // console.log(user.data.role);
             let user_role = user.data.role;
             // setUser(user.data);
@@ -54,13 +64,7 @@ const DangNhap = ({ navigation }) => {
     const sv = () => {
         navigation.replace("SinhVienDangKy");
     }
-    const exportBaoCao = () => {
-        navigation.replace("ExportBaoCao");
-    }
 
-    const diemdanh = () => {
-        navigation.replace("DiemDanh");
-    }
     return (
         <View style={Styles.containerlogin}>
             <Text style={[Styles.subject, Styles.margin_bottom_20]}>ĐĂNG NHẬP</Text>
@@ -69,9 +73,7 @@ const DangNhap = ({ navigation }) => {
             <PaperTextInput value={password} label="Password" mode="outlined" onChangeText={t => setPassword(t)} secureTextEntry={true} placeholder="Password..." style={Styles.margin_bottom_20} />
             <PaperButton onPress={login} mode="contained" style={Styles.margin_bottom_20}>Đăng nhập</PaperButton>
             <PaperButton onPress={register} mode="elevated">Đăng ký</PaperButton>
-            {/* <PaperButton onPress={sv} mode="elevated">Sinh Viên</PaperButton> */}
-             {/* <PaperButton onPress={exportBaoCao} mode="elevated">Thống kê</PaperButton> */}
-            {/* <PaperButton onPress={diemdanh} mode="elevated">Điểm danh</PaperButton> */}
+            
         </View>
     )
 }
