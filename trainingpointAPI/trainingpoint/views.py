@@ -488,6 +488,15 @@ class MinhChungViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Up
 
             return queryset
 
+    @action(methods=['patch'], url_path='cap-nhat', detail=True)
+    def capnhat(self, request,pk):
+        minhchung = MinhChung.objects.get(id=pk)
+        for k, v in request.data.items():
+            setattr(minhchung, k, v)  # user.k = v (user.name = v)
+        minhchung.save()
+
+        return Response(serializers.MinhChungSerializer(minhchung).data)
+
 class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.ListAPIView):
     serializer_class = serializers.SinhVienSerializer
     # pagination_class = paginators.SinhVienPaginator

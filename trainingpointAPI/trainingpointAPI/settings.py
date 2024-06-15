@@ -169,23 +169,3 @@ if not firebase_credentials_path:
 cred = credentials.Certificate(firebase_credentials_path)
 firebase_admin.initialize_app(cred)
 
-# CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ALLOW_CREDENTIALS = True
-#
-# CSRF_TRUSTED_ORIGINS = [
-#     'http://localhost:8000',
-#     'http://127.0.0.1:8000',
-# ]
-#
-# CSRF_COOKIE_NAME = "csrftoken"
-
-# import environ
-#
-# env = environ.Env()
-# environ.Env.read_env()
-#
-# CLIENT_ID = env("CLIENT_ID")
-# CLIENT_SECRET = env("CLIENT_SECRET")
-#
-# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env("GOOGLE_CLIENT_ID")
-# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env("GOOGLE_CLIENT_SECRET")
