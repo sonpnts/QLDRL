@@ -61,10 +61,7 @@ const ThemTroLySinhVien = ({ navigation }) => {
         let valid = true;
         let newErrors = {  username: "", firstname: "", lastname: "", password: "", avatar: "", khoa: "" };
 
-        // if (!validateEmail(assistant.email)) {
-        //     newErrors.email = 'Email không hợp lệ!';
-        //     valid = false;
-        // }
+      
         if (!validatePassword(assistant.password)) {
             newErrors.password = 'Password phải có từ 8 ký tự trở lên';
             valid = false;
@@ -97,66 +94,72 @@ const ThemTroLySinhVien = ({ navigation }) => {
     const postAssistant = async () => {
         if (await validateForm()) {
             try {
-                let tk_valid = false; // Đã có tài khoản
+                //  let tk_valid = false; // Đã có tài khoản
                 try {
                     let check = await APIs.get(`${endpoints['tai_khoan_is_valid']}?email=${assistant.email}&username=${assistant.username}`);
-                    if (check.status == 200) {
-                        const res = check.data.is_valid;
-                        if (res) {
-                            setLoading(true);
-                            let form = new FormData();
-                            for (let key in assistant) {
-                                if (key === "avatar") {
-                                    form.append(key, {
-                                        uri: assistant.avatar.uri,
-                                        name: assistant.avatar.fileName,
-                                        type: assistant.avatar.type || 'image/jpeg'
-                                    });
-                                } else {
-                                    form.append(key, assistant[key]);
-                                }
-                            }
-
-                            let accessToken = await AsyncStorage.getItem('access-token');
-                            let res = await APIs.post(endpoints['dang_ky'], form, {
-                                headers: {
-                                    'Content-Type': 'multipart/form-data',
-                                    'Authorization': `Bearer ${accessToken}`
-                                }
-                            });
-
-                            if (res.status === 201) {
-                                Alert.alert('Thêm trợ lý sinh viên thành công!');
-                             
-                
-                                // Reset assistant data after successful creation
-                                setAssistant({
-                                    email: "",
-                                    username: "",
-                                    firstname: "",
-                                    lastname: "",
-                                    password: "",
-                                    avatar: "",
-                                    role: "3",
-                                    khoa: null
+                    if (check.data.is_valid == "False") {
+                        setLoading(true);
+                        let form = new FormData();
+                        for (let key in assistant) {
+                            if (key === "avatar") {
+                                form.append(key, {
+                                    uri: assistant.avatar.uri,
+                                    name: assistant.avatar.fileName,
+                                    type: assistant.avatar.type || 'image/jpeg'
                                 });
-                
-                                // Clear errors
-                                setErrors({
-                                    email: "",
-                                    username: "",
-                                    firstname: "",
-                                    lastname: "",
-                                    password: "",
-                                    avatar: "",
-                                    khoa: ""
-                                });
+                            } else {
+                                form.append(key, assistant[key]);
                             }
                         }
+                        let accessToken = await AsyncStorage.getItem('access-token');
+                        const resdk = await APIs.post(endpoints['dang_ky'], form, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        let formtroly = new FormData();
+                        formtroly.append('trolySV', resdk.data.id);
+                        formtroly.append('khoa', assistant.khoa);
+                        let trolycreate = await APIs.post(endpoints['tro_ly'], formtroly,{
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+
+                        if (resdk.status ===  201 && trolycreate.status === 201 ) {
+                            Alert.alert('Thêm trợ lý sinh viên thành công!');
+                            setAssistant({
+                                email: "",
+                                username: "",
+                                firstname: "",
+                                lastname: "",
+                                password: "",
+                                avatar: "",
+                                role: "3",
+                                khoa: null
+                            });
+            
+                            // Clear errors
+                            setErrors({
+                                email: "",
+                                username: "",
+                                firstname: "",
+                                lastname: "",
+                                password: "",
+                                avatar: "",
+                                khoa: ""
+                            });
+                        }
+                        
+                    }
+                    else {
+                        Alert.alert('Email hoặc username đã tồn tại!');
                     }
                 } catch (ex) {
                     setLoading(false);
-                    Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản trợ lý sinh viên đã tồn tại!');
+                    Alert.alert('Có lỗi gì đó đã xảy ra', ex.message);
                 }
                 
             } catch (ex) {

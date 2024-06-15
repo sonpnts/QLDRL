@@ -7,7 +7,7 @@ import Styles from './Styles';
 import { Picker } from '@react-native-picker/picker';
 
 
-const SinhVienDangKy = ({ ruote, navigation }) => {
+const SinhVienDangKy = ({ route, navigation }) => {
     const [sv, setSv] = useState({
         "email": "",
         "ho_ten": "",
@@ -125,7 +125,7 @@ const SinhVienDangKy = ({ ruote, navigation }) => {
 
     return (
         <ScrollView>
-            <View style={Styles.container}>
+            <View style={Styles.containerlogin}>
                 <Title style={[Styles.subject, Styles.align_item_center]}>
                     Cập nhật thông tin sinh viên
                 </Title>

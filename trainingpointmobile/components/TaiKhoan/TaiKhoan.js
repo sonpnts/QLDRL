@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Avatar, Button as PaperButton, Card, TextInput } from 'react-native-paper';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { Avatar, Title, Caption, Button as PaperButton, Card, TextInput, TextInput as PaperTextInput } from 'react-native-paper';
-import APIs, { endpoints, formatDate } from '../../configs/APIs';
-import Styles from './Styles';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import APIs, { endpoints, formatDate, formatNS } from '../../configs/APIs';
+import Styles from './Styles';
 
 const UserInfo = ({ navigation }) => {
     const [user, setUser] = useState(null);
     const [sv, setSv] = useState(null);
     const [lops, setLops] = useState([]);
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+    const [changedFields, setChangedFields] = useState([]);
     const [errors, setErrors] = React.useState({
         email: "",
         username: "",
@@ -79,11 +80,17 @@ const UserInfo = ({ navigation }) => {
 
     const change = (field, value) => {
         setUser(current => ({ ...current, [field]: value }));
+        if (!changedFields.includes(field)) {
+            setChangedFields([...changedFields, field]);
+        }
         setErrors(current => ({ ...current, [field]: "" })); // Clear error message when the field changes
     };
 
     const changesv = (field, value) => {
         setSv(current => ({ ...current, [field]: value }));
+        if (!changedFields.includes(field)) {
+            setChangedFields([...changedFields, field]);
+        }
     };
 
     const handleChooseAvatar = async () => {
@@ -101,23 +108,47 @@ const UserInfo = ({ navigation }) => {
     const changinfo = async () => {
         try {
             const token = await AsyncStorage.getItem("access-token");
-            const response = await APIs.patch(endpoints['current_taikhoan'], user, {
+            const form = new FormData();
+            changedFields.forEach(field => {
+                if (field === 'avatar') {
+                    // Thêm dữ liệu ảnh vào FormData
+                    form.append('avatar', {
+                        uri: user.avatar.uri,
+                        name: user.avatar.fileName,
+                        type: user.avatar.type || 'image/jpeg'
+                    });
+                } else {
+                    // Cập nhật các trường dữ liệu khác
+                    form.append(field, user[field]);
+                }
+            });
+            console.log(form);
+            const response = await APIs.patch(endpoints['current_taikhoan'], form, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/form-data'
                 }
             });
             if (user.role === 4 && sv) {
-                const ressv = await APIs.patch(endpoints['current_sinhvien'], sv, {
+                // Tạo object chứa các trường đã thay đổi của sinh viên
+                const updatedSvData = {};
+                changedFields.forEach(field => {
+                    updatedSvData[field] = sv[field];
+                });
+                console.log(updatedSvData);
+                const ressv = await APIs.patch(endpoints['current_sinhvien'], updatedSvData, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
                 if (ressv.status === 200) {
-                    Alert.alert('Thông báo', 'Cập nhật thông tin thành công!');
+                    Alert.alert('Thông báo', 'Cập nhật thông tin sinh viên thành công!');
+                    setChangedFields([]); // Đặt lại danh sách các trường đã thay đổi sau khi cập nhật thành công
                 }
             }
             if (response.status === 200) {
-                Alert.alert('Thông báo', 'Cập nhật thông tin thành công!');
+                Alert.alert('Thông báo', 'Cập nhật thông tin tài khoản thành công!');
+                setChangedFields([]); // Đặt lại danh sách các trường đã thay đổi sau khi cập nhật thành công
             }
         } catch (error) {
             console.error("Lỗi khi cập nhật thông tin:", error);
@@ -139,11 +170,11 @@ const UserInfo = ({ navigation }) => {
                     <Card.Content style={Styles.cardContent}>
                         <View style={[Styles.align_item_center, Styles.margin_bottom_20]}>
                             <TouchableOpacity onPress={handleChooseAvatar}>
-                                <Avatar.Image 
-                                    source={{ uri: user.avatar }} 
-                                    size={150} 
-                                    style={Styles.avatar}
-                                />
+                            <Avatar.Image 
+                                source={{ uri: changedFields.includes('avatar') ? user.avatar.uri : user.avatar }} 
+                                size={150} 
+                                style={Styles.avatar}
+                            />
                             </TouchableOpacity>
                         </View>
                         { errors.avatar ? <Text style={Styles.error}>{errors.avatar}</Text> : null}
@@ -195,7 +226,7 @@ const UserInfo = ({ navigation }) => {
                             />
                             <TextInput
                                 label="Ngày sinh"
-                                value={formatDate(sv.ngay_sinh)}
+                                value={formatNS(sv.ngay_sinh)}
                                 editable={false}
                                 style={Styles.input}
                             />
@@ -207,6 +238,7 @@ const UserInfo = ({ navigation }) => {
                     mode="contained" 
                     style={Styles.button}
                     onPress={changinfo}
+                    disabled={!changedFields.length} // Disable nút khi không có thông tin nào được thay đổi
                 >
                     Chỉnh sửa thông tin
                 </PaperButton>

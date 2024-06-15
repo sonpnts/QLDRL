@@ -1,4 +1,6 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet,Dimensions } from "react-native";
+const windowWidth = Dimensions.get('window').width;
+
 
 export default StyleSheet.create({
     container: {
@@ -35,6 +37,35 @@ export default StyleSheet.create({
         textAlign: 'center',
         fontSize: 30
     },
-
+    containerqly: {
+        flex: 1,
+        marginTop: 20,
+        marginLeft:10,
+        padding: 20,
+        flexDirection: "row", // Xếp các nút theo chiều dọc
+        flexWrap: "wrap", // Các nút sẽ xuống dòng khi không đủ chỗ
+        
+      },
+    buttonHomePly: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        marginBottom: 10,
+        marginRight: 10,
+        width: windowWidth / 2.5,
+        alignItems: 'center',
+        borderRadius: 20,
+      },
+      buttonTextQly: {
+        color: '#fff',
+        fontSize: 18,
+      },
+      buttonRow: {
+        // flexDirection: 'row',
+        // justifyContent: 'space-between',
+        marginBottom: 20,
+      },
+      icon: {
+        marginRight: 10,
+      },
 
 });

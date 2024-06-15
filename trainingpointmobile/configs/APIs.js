@@ -1,39 +1,55 @@
 import axios from "axios";
+import moment from "moment";
 
 export const BASE_URL = 'http://192.168.1.218:8000/';
 
-export const formatDate = (dateString) => {
+export const formatNS = (dateString) => {
     const [year, month, day] = dateString.split('-');
     return `${day}/${month}/${year}`;
   };
 
+
+export const formatDate = (date) => {
+    return moment(date).format(' HH:mm - DD/MM/YYYY');
+};
+
+
 // const BASE_URL = 'https://sonpnts.pythonanywhere.com/'
 
 export const endpoints = {
-
-    'dang_ky': '/taikhoans/',
-    'dang_nhap': '/o/token/',
-    'hocky': '/hockinamhocs/',
-    'diemdanh': '/upload-diem-danh/',
-    'current_taikhoan': '/taikhoans/current-taikhoan/',
-    'tai_khoan_is_valid': '/taikhoans/is_valid/',
-    'sinh_vien_is_valid': '/sinhviens/is_valid/',
-    'lop': '/lops/',
-    'sinh_vien': '/sinhviens/',
-    'current_sinhvien': '/sinhviens/current-sinhvien/',
-    'send_mail': '/send_mail/',
-    'khoa': '/khoas/',
-    'bai_viet': '/baiviets/',
     'bao-cao': '/bao-cao/',
-    'binh_luan': (bai_viet_id) => `/baiviets/${bai_viet_id}/comment/`,
-    'owner_binh_luan':(com_id) => `/comments/${com_id}/tac_gia/`,
-    'lay_binh_luan': (bai_viet_id) => `/baiviets/${bai_viet_id}/comments/`,
-    'baiviet_tag': (bai_viet_id) => `/baiviets/${bai_viet_id}/tags/`,
-    'tac_gia': (bai_viet_id) => `/baiviets/${bai_viet_id}/tac_gia/`,
+    'bai_viet': '/baiviets/',
     'baiviet_like': (bai_viet_id) => `/baiviets/${bai_viet_id}/like/`,
     'baiviet_liked': (bai_viet_id) => `/baiviets/${bai_viet_id}/liked/`,
-    'dang_ky_hoat_dong':(hoat_dong_id) => `/thamgias/${hoat_dong_id}/dang-ky-hoat-dong/`,
-    'kiem_tra_dang_ky':(hoat_dong_id) => `/thamgias/${hoat_dong_id}/kiem-tra-dang-ky/`,
+    'baiviet_tag': (bai_viet_id) => `/baiviets/${bai_viet_id}/tags/`,
+    'binh_luan': (bai_viet_id) => `/baiviets/${bai_viet_id}/comment/`,
+    'current_sinhvien': '/sinhviens/current-sinhvien/',
+    'current_taikhoan': '/taikhoans/current-taikhoan/',
+    'dang_ky': '/taikhoans/',
+    'dang_ky_hoat_dong': (hoat_dong_id) => `/thamgias/${hoat_dong_id}/dang-ky-hoat-dong/`,
+    'dang_nhap': '/o/token/',
+    'diemdanh': (hd_ngoaikhoa_id) => `/upload-diem-danh/${hd_ngoaikhoa_id}/`,
+    'dieu': '/dieus/',
+    'hocky': '/hockinamhocs/',
+    'hoat_dong': (hoat_dong_id) => `/hoatdongs/${hoat_dong_id}/`,
+    'hd':'/hoatdongs/',
+    'hoat_dong_diem_danh': '/hoatdongs/diemdanh/',
+    'quan_ly_hoat_dong': '/hoatdongs/quanly/',
+    'hoat_dong_tao_bai_viet':'hoatdongs/chua-co-bai-viet/',
+    'kiem_tra_dang_ky': (hoat_dong_id) => `/thamgias/${hoat_dong_id}/kiem-tra-dang-ky/`,
+    'khoa': '/khoas/',
+    'lay_binh_luan': (bai_viet_id, page) => `/baiviets/${bai_viet_id}/comments/?page=${page}`,
+    'lop': '/lops/',
+    'owner_binh_luan': (com_id) => `/comments/${com_id}/tac_gia/`,
+    'send_mail': '/send_mail/',
+    'xoa_hoat_dong': '/hoatdongs/delete-hoat-dong/',
+    'sinh_vien': '/sinhviens/',
+    'sinh_vien_is_valid': '/sinhviens/is_valid/',
+    'tac_gia': (bai_viet_id) => `/baiviets/${bai_viet_id}/tac_gia/`,
+    'tai_khoan_is_valid': '/taikhoans/is_valid/',
+    'tao_hoat_dong': '/hoatdongs/',
+    'tro_ly': '/trolysinhviens/',
+
 }
 
 export const authAPI = (accessToken) => axios.create({

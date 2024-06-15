@@ -16,7 +16,12 @@ import DangXuat from './components/TaiKhoan/DangXuat';
 import SinhVienDangKy from './components/TaiKhoan/SinhVien';
 import ExportBaoCao from './components/ThongKe/export';
 import ChatScreen from './components/ChatFireBase/ChatScreen';
-import DiemDanh from './components/ThongKe/TestUploadFile';
+import DiemDanh from './components/TroLySinhVien/UploadFileDiemDanh';
+import CreatePost from './components/TroLySinhVien/DangBaiViet';
+import HoatDong from './components/TroLySinhVien/HoatDong';
+import HoatDongChuaCoBaiViet from './components/TroLySinhVien/DanhSanhHoatDong';
+import QuanLyHoatDong from './components/TroLySinhVien/QuanLyCacHoatDong';
+import SuaHoatDong from './components/TroLySinhVien/SuaHoatDong';
 
 
 const Stack = createNativeStackNavigator();
@@ -60,18 +65,23 @@ export default function App({ navigation }) {
     <MyContext.Provider value={[user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole]}>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{
-          headerTitle: 'Quản lý điểm rèn luyện sinh viên'
+          // headerTitle: 'Quản lý điểm rèn luyện sinh viên'
         }}>
           {isAuthenticated && <Stack.Screen name="Main" component={Main} options={{ headerRight: DangXuat }} />}
           {!isAuthenticated && <Stack.Screen name="DangNhap" component={DangNhap} />}
-          <Stack.Screen name="BaiViet" component={BaiViet} />
-          <Stack.Screen name="DangKy" component={DangKy} />
-          <Stack.Screen name="OTP" component={OTP} />
-          <Stack.Screen name="SinhVienDangKy" component={SinhVienDangKy} />
-          <Stack.Screen name="ThemTaiKhoanTroLy" component={ThemTroLySinhVien} />
-          <Stack.Screen name="ExportBaoCao" component={ExportBaoCao} />
-          <Stack.Screen name="Chat" component={ChatScreen} />
-          <Stack.Screen name="DiemDanh" component={DiemDanh} />
+          <Stack.Screen name="BaiViet" component={BaiViet} options={{ title: 'Bài viết' }} />
+          <Stack.Screen name="DangKy" component={DangKy} options={{ title: 'Đăng ký' }} />
+          <Stack.Screen name="OTP" component={OTP} options={{ title: 'OTP' }} />
+          <Stack.Screen name="SinhVienDangKy" component={SinhVienDangKy} options={{ title: 'Sinh viên đăng ký' }} />
+          <Stack.Screen name="ThemTaiKhoanTroLy" component={ThemTroLySinhVien} options={{ title: 'Thêm tài khoản trợ lý' }} />
+          <Stack.Screen name="ExportBaoCao" component={ExportBaoCao} options={{ title: 'Xuất báo cáo' }} />
+          <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+          <Stack.Screen name="DiemDanh" component={DiemDanh} options={{ title: 'Điểm danh' }} />
+          <Stack.Screen name="CreatePost" component={CreatePost} options={{ title: 'Tạo bài viết' }} />
+          <Stack.Screen name="HoatDong" component={HoatDong} options={{ title: 'Hoạt động' }} />
+          <Stack.Screen name="HoatDongChuaCoBaiViet" component={HoatDongChuaCoBaiViet} options={{ title: 'Các hoạt động chưa có bài viết' }} />
+          <Stack.Screen name="QuanLyHoatDong" component={QuanLyHoatDong} options={{ title: 'Quản lý hoạt động' }} />
+          <Stack.Screen name="SuaHoatDong" component={SuaHoatDong} options={{ title: 'Chỉnh sửa hoạt động' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </MyContext.Provider>

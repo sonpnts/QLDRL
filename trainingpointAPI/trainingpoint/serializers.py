@@ -38,19 +38,15 @@ class TaiKhoanSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         req = super().to_representation(instance)
-        req['avatar'] = instance.avatar.url
+        req['avatar'] = instance.avatar.url  # Đảm bảo lấy đường dẫn của avatar từ instance
         return req
 
     def create(self, validated_data):
         data=validated_data.copy();
         taiKhoan = TaiKhoan(**data)
         taiKhoan.set_password(taiKhoan.password)
-
         taiKhoan.save()
-
         return taiKhoan
-
-
 
 
 class ItemSerializer(serializers.ModelSerializer):  # Minh chứng, tài khoản, bài viết
@@ -111,29 +107,19 @@ class MinhChungSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class TagSerializier(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = '__all__'
-
 
 class BaiVietSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BaiViet
+        fields = ['id', 'title', 'image', 'tro_ly', 'hd_ngoaikhoa', 'content']
+
     def to_representation(self, instance):
         req = super().to_representation(instance)
         req['image'] = instance.image.url
         return req
 
-    class Meta:
-        model = BaiViet
-        fields = ['id', 'title', 'image', 'created_date', 'updated_date', 'tro_ly', 'hd_ngoaikhoa', 'tags']
 
-
-class BaivietTagSerializer(BaiVietSerializer):
-    tags = TagSerializier(many=True)
-
-    class Meta:
-        model = BaiVietSerializer.Meta.model
-        fields = BaiVietSerializer.Meta.fields + ['content', 'tags']
 
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -172,7 +158,7 @@ class SinhVienSerializer(serializers.ModelSerializer):
         model = SinhVien
         fields = ['id', 'email', 'ho_ten', 'ngay_sinh', 'lop', 'dia_chi', 'gioi_tinh']
 
-class AuthenticatedBaiVietTagSerializer(BaivietTagSerializer):
+class AuthenticatedBaiVietTagSerializer(BaiVietSerializer):
     liked = serializers.SerializerMethodField()
 
     def get_liked(self, bai_viet):
@@ -181,9 +167,15 @@ class AuthenticatedBaiVietTagSerializer(BaivietTagSerializer):
             return bai_viet.like_set.filter(tai_khoan=request.user, active=True).exists()
 
     class Meta:
-        model = BaivietTagSerializer.Meta.model
-        fields = BaivietTagSerializer.Meta.fields + ['liked']
+        model = BaiVietSerializer.Meta.model
+        fields = BaiVietSerializer.Meta.fields + ['liked']
 
 
 class UploadFileDiemDanhSerializer(serializers.Serializer):
     file = serializers.FileField()
+
+
+class TroLySinhVien_KhoaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TroLySinhVien_Khoa
+        fields = '__all__'

@@ -36,7 +36,7 @@ const DangNhap = ({ navigation }) => {
                 "type": "login",
                 "payload": user.data
             });
-            console.log(user.data.role);
+            // console.log(user.data.role);
             let user_role = user.data.role;
             // setUser(user.data);
             setRole(user_role);

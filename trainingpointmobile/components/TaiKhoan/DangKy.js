@@ -4,7 +4,7 @@ import { TextInput as PaperTextInput, Title, Button as PaperButton, Avatar } fro
 import * as ImagePicker from 'expo-image-picker';
 import APIs, { endpoints } from "../../configs/APIs";
 import Styles from "./Styles";
-// import mime from 'mime';
+
 
 
 const DangKy = ({ route, navigation }) => {
@@ -93,7 +93,7 @@ const DangKy = ({ route, navigation }) => {
                 if (check.status == 200) {
                     const res = check.data.is_valid;
                     if (res) {
-                        tk_valid = true;
+                        
                         message = check.data.message;
                     }
                 }
@@ -123,16 +123,12 @@ const DangKy = ({ route, navigation }) => {
                         name: user.avatar.fileName ,
                         type: user.avatar.type || 'image/jpeg'
                         // type: mime.getType(user.avatar.uri) || "image/jpeg"
-
                     });
-                    console.log("Avatar type: ", user[key].type)
                     } else {
                     form.append(key, user[key]);
                     }
                 }
-            
                 console.log(form);
-                // console.log('Avatar URI:', user.avatar.uri);
                 let res = await APIs.post(endpoints['dang_ky'], form, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
@@ -190,7 +186,7 @@ const DangKy = ({ route, navigation }) => {
 
     return (
         <ScrollView automaticallyAdjustKeyboardInsets={true}>
-            <View style={user.avatar ? Styles.container : [Styles.container, { marginTop: 40 }]}>
+            <View style={user.avatar ? Styles.containerlogin : [Styles.containerlogin, { marginTop: 40 }]}>
                 <View style={Styles.margin_bottom_40}>
                     <Title numberOfLines={1} ellipsizeMode="tail" style={[Styles.subject, Styles.align_item_center]}>
                         Đăng ký

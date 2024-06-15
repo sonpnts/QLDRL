@@ -1,7 +1,7 @@
 import csv
 from io import BytesIO
 from datetime import datetime
-
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from unidecode import unidecode
@@ -22,29 +22,6 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib import colors
 
 
-class LopViewSet(viewsets.ViewSet,generics.ListAPIView):
-    queryset = Lop.objects.filter(active=True)
-    serializer_class = serializers.LopSerializer
-    pagination_class = paginators.LopPaginator
-
-    def get_queryset(self):
-        queryset = self.queryset
-        if self.action == 'list':
-            q = self.request.query_params.get('ten_lop')
-            if q:
-                queryset = queryset.filter(ten_lop__icontains=q)
-
-        return queryset
-
-    @action(methods=['get'], url_path='sinhviens', detail=True)
-    def get_sinhviens(self, request, pk):
-        sinhviens = self.get_object().sinhvien_set.filter(active=True)
-        q = request.query_params.get('ho_ten')
-        if q:
-            sinhviens = sinhviens.filter(ho_ten__icontains=q)
-
-        return Response(serializers.SinhVienSerializer(sinhviens, many=True).data,
-                        status=status.HTTP_200_OK)
 
 
 class KhoaViewSet(viewsets.ViewSet,generics.ListAPIView):
@@ -77,9 +54,8 @@ class KhoaViewSet(viewsets.ViewSet,generics.ListAPIView):
         lops = khoa.lop_set.filter(active=True).prefetch_related('sinhvien_set')
         # Lấy tất cả sinh viên từ các lớp
         sinhviens = [sinhvien  # sinh viên thêm vào mảng
-                     for lop in lops  # lặp qua các lớp
+                     for lop in lops
                      for sinhvien in lop.sinhvien_set.filter(active=True)
-                     # Lặp qua các sinh viên trong lop.sinhvien_set lọc active true
                      ]
         q = request.query_params.get('ho_ten')
         if q:
@@ -88,23 +64,90 @@ class KhoaViewSet(viewsets.ViewSet,generics.ListAPIView):
                         status=status.HTTP_200_OK)
 
 
-class HocKyNamHocViewset(viewsets.ViewSet, generics.RetrieveAPIView):
-    queryset = HocKy_NamHoc.objects.all()
-    serializer_class = serializers.HockyNamhocSerializer
+
+
+
+
+
+class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView, generics.RetrieveAPIView):
+    queryset = BaiViet.objects.filter(active=True)
+    serializer_class = serializers.BaiVietSerializer
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            if isinstance(self.request.user, AnonymousUser):
-                return [permissions.IsAuthenticated()]
-            else:
-                if (self.request.user.is_authenticated and
-                        self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
-                                                   TaiKhoan.Roles.ADMIN.value]):
+        if self.action in ['add_comment', 'like']:
+            return [permissions.IsAuthenticated()]
+        else:
+            if self.action in ['create', 'update', 'partial_update', 'destroy']:
+                if isinstance(self.request.user, AnonymousUser):
                     return [permissions.IsAuthenticated()]
                 else:
-                    raise exceptions.PermissionDenied()
+                    if (self.request.user.is_authenticated and
+                            self.request.user.role in [TaiKhoan.Roles.TroLySinhVien.value,
+                                                       TaiKhoan.Roles.CongTacSinhVien.value]):
+                        return [permissions.IsAuthenticated()]
+                    else:
+                        raise exceptions.PermissionDenied()
 
         return [permissions.AllowAny()]
+
+    def get_serializer_class(self):
+        if self.request.user.is_authenticated:
+            return serializers.AuthenticatedBaiVietTagSerializer
+
+        return self.serializer_class
+
+    def get_queryset(self):
+        queries = self.queryset
+        q = self.request.query_params.get("q")
+        if q:
+            queries = queries.filter(title__icontains=q)
+
+        return queries
+
+    @action(methods=['get'], url_path="comments", detail=True)
+    def get_comments(self, request, pk):
+        comments = Comment.objects.filter(bai_viet=pk).order_by('-created_date')
+        paginator = paginators.CommentPaginator()
+        page = paginator.paginate_queryset(comments, request)
+        if page is not None:
+            serializer = serializers.CommentSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        return Response(serializers.CommentSerializer(comments, many=True).data,
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['post'], url_path="comment", detail=True)
+    def add_comment(self, request, pk):
+        c = Comment.objects.create(tai_khoan=request.user, bai_viet=self.get_object(), content=request.data.get('content'))
+
+        return Response(serializers.CommentSerializer(c).data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['post'], url_path='like', detail=True)
+    def like(self, request, pk):
+        li, created = Like.objects.get_or_create(bai_viet=self.get_object(), tai_khoan=request.user)
+
+        if not created:
+            li.active = not li.active
+            li.save()
+
+        return Response(
+            serializers.AuthenticatedBaiVietTagSerializer(self.get_object(), context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'], detail=True, url_path='liked')
+    def check_like_status(self, request, pk=None):
+        bai_viet = self.get_object()
+        user = request.user
+        liked = Like.objects.filter(bai_viet=bai_viet, tai_khoan=user, active=1).exists()
+        if not liked:
+            return Response({'liked': False}, status=status.HTTP_200_OK)
+        return Response({'liked': True }, status=status.HTTP_200_OK)
+
+
+    @action(methods=['get'], url_path='tac_gia', detail=True)
+    def get_tacgia(self, request, pk):
+        baiviet = self.get_object()
+        tacgia = TaiKhoan.objects.get(id=baiviet.tro_ly.id)
+        return Response(serializers.TaiKhoanSerializer(tacgia).data, status=status.HTTP_200_OK)
 
 
 
@@ -148,190 +191,19 @@ class DieuViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
                         status=status.HTTP_200_OK)
 
 
-class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet,generics.CreateAPIView, generics.ListCreateAPIView, generics.UpdateAPIView,
-                               generics.DestroyAPIView):
-    queryset = HoatDongNgoaiKhoa.objects.filter(active=True)
-    serializer_class = serializers.HoatDongNgoaiKhoaSerializer
-
-    def get_queryset(self):
-        queryset = self.queryset
-        #if self.action == 'list':
-        q = self.request.query_params.get('ten_HD_NgoaiKhoa')
-        if q:
-           queryset = queryset.filter(ten_HD_NgoaiKhoa__icontains=q)
-
-        return queryset
-
-    def get_permissions(self):
-        if self.action in ['get_thamgias']:
-            return [permissions.IsAuthenticated()]
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            if isinstance(self.request.user, AnonymousUser):
-                return [permissions.IsAuthenticated()]
-            else:
-                if (self.request.user.is_authenticated and
-                        (self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
-                                                    TaiKhoan.Roles.TroLySinhVien.value])):
-                    return [permissions.IsAuthenticated()]
-                else:
-                    raise exceptions.PermissionDenied()
-        return [permissions.AllowAny()]
-
-    @action(methods=['get'], url_path='thamgias', detail=True)
-    def get_thamgias(self, request, pk):
-        hoatdong = HoatDongNgoaiKhoa.objects.get(id=pk)
-        thamgias = ThamGia.objects.filter(hd_ngoaikhoa=hoatdong)
-        return Response(serializers.ThamGiaSerializer(thamgias, many=True).data,
-                        status=status.HTTP_200_OK)
-
-
-class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView, generics.RetrieveAPIView):
-    queryset = BaiViet.objects.prefetch_related('tags').filter(active=True)
-    serializer_class = serializers.BaivietTagSerializer
-
-    def get_permissions(self):
-        if self.action in ['add_comment', 'like']:
-            return [permissions.IsAuthenticated()]
-        else:
-            if self.action in ['create', 'update', 'partial_update', 'destroy']:
-                if isinstance(self.request.user, AnonymousUser):
-                    return [permissions.IsAuthenticated()]
-                else:
-                    if (self.request.user.is_authenticated and
-                            self.request.user.role in [TaiKhoan.Roles.TroLySinhVien.value,
-                                                       TaiKhoan.Roles.CongTacSinhVien.value]):
-                        return [permissions.IsAuthenticated()]
-                    else:
-                        raise exceptions.PermissionDenied()
-
-        return [permissions.AllowAny()]
-
-    def get_serializer_class(self):
-        if self.request.user.is_authenticated:
-            return serializers.AuthenticatedBaiVietTagSerializer
-
-        return self.serializer_class
-
-    def get_queryset(self):
-        queries = self.queryset
-
-        q = self.request.query_params.get("q")
-        if q:
-            queries = queries.filter(title__icontains=q)
-
-        tag = self.request.query_params.get("tag")
-        if tag:
-            tag_ids = Tag.objects.filter(name__icontains=tag).values_list('id', flat=True)
-            queries = queries.filter(tags__in=tag_ids)
-
-        return queries
-
-    @action(methods=['get'], url_path="comments", detail=True)
-    def get_comments(self, request, pk):
-        comments = Comment.objects.filter(bai_viet=pk)
-        # paginator = paginators.CommentPaginator()
-        # page = paginator.paginate_queryset(comments, request)
-        # if page is not None:
-        #     serializer = serializers.CommentSerializer(page, many=True)
-        #     return paginator.get_paginated_response(serializer.data)
-
-        return Response(serializers.CommentSerializer(comments, many=True).data,
-                        status=status.HTTP_200_OK)
-
-    @action(methods=['post'], url_path="comment", detail=True)
-    def add_comment(self, request, pk):
-        c = Comment.objects.create(tai_khoan=request.user, bai_viet=self.get_object(), content=request.data.get('content'))
-
-        return Response(serializers.CommentSerializer(c).data, status=status.HTTP_201_CREATED)
-
-    @action(methods=['post'], url_path='like', detail=True)
-    def like(self, request, pk):
-        li, created = Like.objects.get_or_create(bai_viet=self.get_object(), tai_khoan=request.user)
-
-        if not created:
-            li.active = not li.active
-            li.save()
-
-        return Response(
-            serializers.AuthenticatedBaiVietTagSerializer(self.get_object(), context={'request': request}).data, status=status.HTTP_201_CREATED)
-
-    @action(methods=['get'], detail=True, url_path='liked')
-    def check_like_status(self, request, pk=None):
-        bai_viet = self.get_object()
-        user = request.user
-        liked = Like.objects.filter(bai_viet=bai_viet, tai_khoan=user, active=1).exists()
-        if not liked:
-            return Response({'liked': False}, status=status.HTTP_200_OK)
-        return Response({'liked': True }, status=status.HTTP_200_OK)
-
-
-    @action(methods=['get'], url_path='tac_gia', detail=True)
-    def get_tacgia(self, request, pk):
-        baiviet = self.get_object()
-        tacgia = TaiKhoan.objects.get(id=baiviet.id)
-        return Response(serializers.TaiKhoanSerializer(tacgia).data, status=status.HTTP_200_OK)
-
-    @action(methods=['get'], url_path='tags', detail=True)
-    def get_tag(self, request, pk=None):
-        try:
-            baiviet = self.get_object()
-            tags = baiviet.tags.all()
-            serializer = serializers.TagSerializier(tags, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except BaiViet.DoesNotExist:
-            return Response({'error': 'Bài viết không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class TagViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
-    queryset = Tag.objects.all()
-    serializer_class = serializers.TagSerializier
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            if isinstance(self.request.user, AnonymousUser):
-                return [permissions.IsAuthenticated()]
-            else:
-                if (self.request.user.is_authenticated and
-                        self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
-                                                   TaiKhoan.Roles.TroLySinhVien.value,
-                                                   TaiKhoan.Roles.ADMIN.value]):
-                    return [permissions.IsAuthenticated()]
-                else:
-                    raise exceptions.PermissionDenied()
-
-        return [permissions.AllowAny()]
-
-    def get_queryset(self):
-        queryset = self.queryset
-        q = self.request.query_params.get("q")
-        if q:
-            queryset = queryset.filter(name__icontains=q)
-
-        return queryset
-
-    @action(methods=['get'], url_path='baiviets', detail=True)
-    def get_baiviet(self, request, pk):
-        baiviet = self.get_object().baiviets.all()
-        return Response(serializers.BaiVietSerializer(baiviet, many=True).data,
-                        status=status.HTTP_200_OK)
-
-
-
-
 class CommentViewset(viewsets.ViewSet, generics.CreateAPIView, generics.DestroyAPIView, generics.UpdateAPIView):
     queryset = Comment.objects.all()
     serializer_class = serializers.CommentSerializer
 
-
     # def get_permissions(self):
-    #     if self.action in ['get']:
+    #     if self.action == 'get_tac_gia':
     #         return [permissions.IsAuthenticated()]
     #     else:
-    #         return [perms.CommentOwner]
+    #         raise exceptions.PermissionDenied()
+    #         # return [perms.CommentOwner()]
 
     @action(methods=['get'], url_path='tac_gia', detail=True)
-    def get_tacgia(self, request, pk):
+    def get_tac_gia(self, request, pk):
         comment = self.queryset.get(pk=pk)
         tacgia = comment.tai_khoan
         return Response(serializers.TaiKhoanSerializer(tacgia).data, status=status.HTTP_200_OK)
@@ -401,87 +273,401 @@ class DiemRenLuyenViewset(viewsets.ViewSet, generics.ListCreateAPIView, generics
         return queryset
 
 
-class CalculateDiemRenLuyen(APIView):
-    def post(self, request, sinhvien_id, hk_id):
+
+
+class HocKyNamHocViewset(viewsets.ModelViewSet):
+    queryset = HocKy_NamHoc.objects.all()
+    serializer_class = serializers.HockyNamhocSerializer
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            if isinstance(self.request.user, AnonymousUser):
+                return [permissions.IsAuthenticated()]
+            else:
+                if (self.request.user.is_authenticated and
+                        self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
+                                                   TaiKhoan.Roles.ADMIN.value]):
+                    return [permissions.IsAuthenticated()]
+                else:
+                    raise exceptions.PermissionDenied()
+        return [permissions.AllowAny()]
+
+class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet,
+                               generics.CreateAPIView,
+                               generics.ListCreateAPIView,
+                               generics.UpdateAPIView,
+                               generics.DestroyAPIView,
+                               generics.RetrieveAPIView):
+    queryset = HoatDongNgoaiKhoa.objects.filter(active=True)
+    serializer_class = serializers.HoatDongNgoaiKhoaSerializer
+    # lookup_field = 'pk'
+
+    def get_queryset(self):
+        queryset = self.queryset
+        #if self.action == 'list':
+        q = self.request.query_params.get('ten_HD_NgoaiKhoa')
+        hk=self.request.query_params.get('hoc_ky')
+        if q:
+           queryset = queryset.filter(ten_HD_NgoaiKhoa__icontains=q)
+
+        if hk:
+            queryset = queryset.filter(hk_nh__hoc_ky=hk)
+
+        return
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        hd = HoatDongNgoaiKhoa.objects.get(id=pk)
+        if hd:
+            return Response(serializers.HoatDongNgoaiKhoaSerializer(hd).data, status=status.HTTP_200_OK)
+        return Response({'error': 'Không tìm thấy hoạt động ngoại khóa'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(methods=['get'], url_path='diemdanh', detail=False)
+    def get_hdnk_diemdanh(self, request):
+        # Chỉ điểm danh các hoạt động được tổ chức bởi khoa mình, không được điểm danh các hoạt được tổ chức bởi khoa khác
         try:
+            hk = self.request.query_params.get('hoc_ky')
+            troly=TaiKhoan.objects.get(username=request.user.username)
+            khoa = TroLySinhVien_Khoa.objects.get(trolySV=troly).khoa
+            troly_list = TroLySinhVien_Khoa.objects.filter(khoa=khoa).values_list('trolySV', flat=True)
+            hoatdong= HoatDongNgoaiKhoa.objects.filter(hk_nh__hoc_ky=hk, tro_ly__in=troly_list,
+                                                       ngay_to_chuc__lte=timezone.now())
 
-            sinh_vien = SinhVien.objects.get(id=sinhvien_id)
-            # Lấy tất cả các hoạt động mà sinh viên đã tham gia trong học kỳ đó
-            hoat_dong_tham_gia = ThamGia.objects.filter(sinh_vien=sinh_vien, hd_ngoaikhoa__hk_nh_id=hk_id)
+            if not hoatdong.exists():
+                return Response({"message": "No activities found for the specified assistant and semester"},
+                                status=status.HTTP_404_NOT_FOUND)
 
-            # Tính điểm rèn luyện
-            diem_ren_luyen = 0
-            dieu_points = {}
+            return Response(serializers.HoatDongNgoaiKhoaSerializer(hoatdong, many=True).data,
+                            status=status.HTTP_200_OK)
 
-            for tham_gia in hoat_dong_tham_gia:
-                hd_ngoaikhoa = tham_gia.hd_ngoaikhoa
-                dieu_id = hd_ngoaikhoa.dieu.id
+        except TaiKhoan.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-                if dieu_id not in dieu_points:
-                    dieu_points[dieu_id] = 0
-
-                dieu_points[dieu_id] += hd_ngoaikhoa.diem_ren_luyen
-
-            for dieu_id, points in dieu_points.items():
-                try:
-                    dieu = Dieu.objects.get(id=dieu_id)
-                    diem_ren_luyen += min(points, dieu.diem_toi_da)
-                except ObjectDoesNotExist:
-                    return Response({'error': f'Dieu với ID {dieu_id} không tồn tại'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-
-            # Lưu điểm rèn luyện vào bảng DiemRenLuyen
-            diem_ren_luyen_entry, created = DiemRenLuyen.objects.update_or_create(
-                sinh_vien=sinh_vien,
-                hk_nh_id=hk_id,
-                defaults={'diem_tong': diem_ren_luyen}
-            )
-
-            serializer = serializers.DiemRenLuyenSerializer(diem_ren_luyen_entry)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        except SinhVien.DoesNotExist:
-            return Response({'error': 'Sinh viên không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+        except TroLySinhVien_Khoa.DoesNotExist:
+            return Response({"error": "Assistant not found"}, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            print(e)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class UploadFileDiemDanh(APIView):
-    def post(self, request, hoc_ky_id, hd_ngoaikhoa_id, *args, **kwargs):
-        serializer = serializers.UploadFileDiemDanhSerializer(data=request.data)
-        if serializer.is_valid():
-            csv_file = serializer.validated_data['file']
-            decoded_file = csv_file.read().decode('utf-8').splitlines()
-            reader = csv.reader(decoded_file)
+    @action(methods=['get'], url_path='quanly', detail=False)
+    def get_hdnk_quanly(self, request):
+        # Chỉ điểm danh các hoạt động được tổ chức bởi khoa mình, không được điểm danh các hoạt được tổ chức bởi khoa khác
+        try:
+            hk = self.request.query_params.get('hoc_ky')
+            troly = TaiKhoan.objects.get(username=request.user.username);
+            khoa = TroLySinhVien_Khoa.objects.get(trolySV=troly).khoa;
+            troly_list = TroLySinhVien_Khoa.objects.filter(khoa=khoa).values_list('trolySV', flat=True)
+            hoatdong = HoatDongNgoaiKhoa.objects.filter(hk_nh__hoc_ky=hk, tro_ly__in=troly_list, active=True)
 
-            # Lấy hoc_ky và nam_hoc từ hoc_ky_id
-            hoc_ky_nam_hoc = get_object_or_404(HocKy_NamHoc, id=hoc_ky_id)
-            hd_ngoaikhoa = get_object_or_404(HoatDongNgoaiKhoa, id=hd_ngoaikhoa_id)
+            # hoatdong_chua_co_baiviet = hoatdong.exclude(id__in=BaiViet.objects.values('hd_ngoaikhoa__id'))
 
-            errors = []
-            for row in reader:
-                try:
-                    # Giả sử file CSV có 1 cột: mssv
-                    mssv = row[0]
-                    # Tìm ThamGia với hoc_ky_nam_hoc, hd_ngoaikhoa và mssv
-                    tham_gia = ThamGia.objects.get(
-                        sinh_vien__mssv=mssv,
-                        hd_ngoaikhoa=hd_ngoaikhoa,
-                        hd_ngoaikhoa__hk_nh=hoc_ky_nam_hoc
-                    )
-                    tham_gia.trang_thai = ThamGia.TrangThai.DiemDanh
-                    tham_gia.save()
-                except ThamGia.DoesNotExist:
-                    errors.append(f"Không tìm thấy tham gia với MSSV {mssv} và HK_NH {hoc_ky_id} trong hoạt động ngoại khóa {hd_ngoaikhoa_id}")
-                except Exception as e:
-                    errors.append(f"Đã xảy ra lỗi với MSSV {mssv}: {str(e)}")
+            if not hoatdong.exists():
+                return Response({"message": "No activities found for the specified assistant and semester"},
+                                status=status.HTTP_404_NOT_FOUND)
 
-            if errors:
-                return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"message": "Cập nhật trạng thái thành công!"}, status=status.HTTP_201_CREATED)
+            return Response(serializers.HoatDongNgoaiKhoaSerializer(hoatdong, many=True).data,
+                            status=status.HTTP_200_OK)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-  
+        except TaiKhoan.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except TroLySinhVien_Khoa.DoesNotExist:
+            return Response({"error": "Assistant not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            print(e)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(methods=['get'], detail=False, url_path='chua-co-bai-viet')
+    def get_activities_without_post(self, request):
+        try:
+            hoc_ky = self.request.query_params.get('hoc_ky')
+            troly=TaiKhoan.objects.get(username=request.user.username)
+            khoa = TroLySinhVien_Khoa.objects.get(trolySV=troly).khoa
+            troly_list = TroLySinhVien_Khoa.objects.filter(khoa=khoa).values_list('trolySV', flat=True)
+            hoatdong = HoatDongNgoaiKhoa.objects.filter(hk_nh__hoc_ky=hoc_ky, tro_ly__in=troly_list, active=True, ngay_to_chuc__gt=timezone.now())
+            # Lọc những hoạt động chưa có bài viết tương ứng trong model BaiViet
+            hoatdong_chua_co_baiviet = hoatdong.exclude(id__in=BaiViet.objects.values('hd_ngoaikhoa__id'))
+
+            return Response(serializers.HoatDongNgoaiKhoaSerializer(hoatdong_chua_co_baiviet, many=True).data, status=status.HTTP_200_OK)
+        except TaiKhoan.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except TroLySinhVien_Khoa.DoesNotExist:
+            return Response({"error": "Assistant not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            print(e)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(methods=['post'], detail=False, url_path='delete-hoat-dong')
+    def delete_hoat_dong(self, request, *args, **kwargs):
+        hoatdong_id = request.query_params.get('hd')
+        if not hoatdong_id:
+            return Response({'error': 'hoatdong_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            hoatdong = HoatDongNgoaiKhoa.objects.get(id=hoatdong_id)
+        except HoatDongNgoaiKhoa.DoesNotExist:
+            return Response({'error': 'Hoat dong not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        hoatdong.active = False
+        hoatdong.save()
+
+        baiviets = BaiViet.objects.filter(hd_ngoaikhoa=hoatdong.id)
+        if baiviets.exists():
+            baiviets.update(active=False)
+
+        return Response(serializers.HoatDongNgoaiKhoaSerializer(hoatdong).data, status=status.HTTP_200_OK)
+
+
+    def get_permissions(self):
+            if self.action in ['get_thamgias']:
+                return [permissions.IsAuthenticated()]
+            if self.action in ['create', 'update', 'partial_update', 'destroy']:
+                if isinstance(self.request.user, AnonymousUser):
+                    return [permissions.IsAuthenticated()]
+                else:
+                    if (self.request.user.is_authenticated and
+                            (self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
+                                                        TaiKhoan.Roles.TroLySinhVien.value])):
+                        return [permissions.IsAuthenticated()]
+                    else:
+                        raise exceptions.PermissionDenied()
+            return [permissions.AllowAny()]
+
+    @action(methods=['get'], url_path='thamgias', detail=True)
+    def get_thamgias(self, request, pk):
+        hoatdong = HoatDongNgoaiKhoa.objects.get(id=pk)
+        thamgias = ThamGia.objects.filter(hd_ngoaikhoa=hoatdong)
+        return Response(serializers.ThamGiaSerializer(thamgias, many=True).data,
+                        status=status.HTTP_200_OK)
+
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data['tro_ly'] = TaiKhoan.objects.get(username=request.user.username).id
+        hd = HoatDongNgoaiKhoa.objects.create(**data)
+        return Response(serializers.HoatDongNgoaiKhoaSerializer(hd).data, status=status.HTTP_201_CREATED)
+
+class LopViewSet(viewsets.ViewSet,generics.ListAPIView):
+    queryset = Lop.objects.filter(active=True)
+    serializer_class = serializers.LopSerializer
+    pagination_class = paginators.LopPaginator
+
+    def get_queryset(self):
+        queryset = self.queryset
+        if self.action == 'list':
+            q = self.request.query_params.get('ten_lop')
+            if q:
+                queryset = queryset.filter(ten_lop__icontains=q)
+
+        return queryset
+
+    @action(methods=['get'], url_path='sinhviens', detail=True)
+    def get_sinhviens(self, request, pk):
+        sinhviens = self.get_object().sinhvien_set.filter(active=True)
+        q = request.query_params.get('ho_ten')
+        if q:
+            sinhviens = sinhviens.filter(ho_ten__icontains=q)
+
+        return Response(serializers.SinhVienSerializer(sinhviens, many=True).data,
+                        status=status.HTTP_200_OK)
+
+class MinhChungViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
+    queryset = MinhChung.objects.filter(active=True)
+    serializer_class = serializers.MinhChungSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset
+        if self.action == 'list':
+            mssv = self.request.query_params.get('mssv')
+            hoatdong = self.request.query_params.get('hoat_dong')
+            if mssv:
+                sinhvien = SinhVien.objects.get(mssv=mssv)
+                thamgias = ThamGia.objects.filter(sinh_vien=sinhvien)
+                queryset = queryset.filter(tham_gia__in=thamgias)
+            if hoatdong:
+                hoatdongs = HoatDongNgoaiKhoa.objects.filter(ten_HD_NgoaiKhoa__icontains=hoatdong)
+                thamgias = ThamGia.objects.filter(hd_ngoaikhoa__in=hoatdongs)
+                queryset = queryset.filter(tham_gia__in=thamgias)
+
+            return queryset
+
+class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.ListAPIView):
+    serializer_class = serializers.SinhVienSerializer
+    # pagination_class = paginators.SinhVienPaginator
+    queryset = SinhVien.objects.all()
+    def get_permissions(self):
+        if self.action == "sinhvien_is_valid":
+            return [permissions.AllowAny()]
+        if self.action in ['create']:
+            return [permissions.AllowAny()]
+        if isinstance(self.request.user, AnonymousUser):                                #AnonymousUser: Người dùng chưa đăng nhập
+            return [permissions.IsAuthenticated()]                                      #Yêu cầu truy cập
+        else:
+            if self.request.user.role == TaiKhoan.Roles.SinhVien:
+                if self.request.user.email == SinhVien.objects.filter(email=self.request.user.email).first().email:
+                    return [permissions.IsAuthenticated()]                                #Cấp quyền truy cập
+                else:
+                    raise exceptions.PermissionDenied()                                 #Từ chối quyền truy cập
+            elif (self.request.user.role == TaiKhoan.Roles.TroLySinhVien or
+                  self.request.user.role == TaiKhoan.Roles.CongTacSinhVien):
+                return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        queryset = self.queryset
+        #if self.action == 'list':
+        q = self.request.query_params.get('ho_ten')
+        if q:
+           queryset = queryset.filter(ho_ten__icontains=q)
+        mssv = self.request.query_params.get('mssv')
+        if mssv:
+            queryset = queryset.filter(mssv=mssv)
+
+        return queryset
+
+    @action(methods=['get', 'patch'], url_path='current-sinhvien', detail=False)
+    def get_current_sv(self, request):
+        sv = SinhVien.objects.get(email=request.user.email)
+        if request.method == "PATCH":
+            for k, v in request.data.items():
+                if hasattr(sv, k):
+                    setattr(sv, k, v)
+            sv.save()
+        return Response(serializers.SinhVienSerializer(sv).data)
+
+class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
+    queryset = TaiKhoan.objects.filter(is_active=True).all()
+    serializer_class = serializers.TaiKhoanSerializer
+    # parser_classes = [parsers.MultiPartParser]
+
+    def get_permissions(self):
+        if self.action in ['taikhoan_is_valid']:
+            return [permissions.AllowAny()]
+        if self.action in ['get_current_user','PATCH']:
+            return [permissions.IsAuthenticated()]
+        elif self.action == "create":
+            if isinstance(self.request.user, AnonymousUser):
+                if self.request.data and (self.request.data.get('role') == str(TaiKhoan.Roles.SinhVien)):
+                    return [permissions.AllowAny()]
+                else:
+                    return [permissions.IsAuthenticated()]
+            elif self.request.data and self.request.data.get('role') == str(TaiKhoan.Roles.TroLySinhVien):
+                if self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value, TaiKhoan.Roles.ADMIN.value]:
+                    return [permissions.IsAuthenticated()]
+                else:
+                    raise exceptions.PermissionDenied()
+            elif self.request.data and self.request.data.get('role') in [str(TaiKhoan.Roles.CongTacSinhVien),
+                                                                         str(TaiKhoan.Roles.ADMIN)]:
+                if self.request.user.role == TaiKhoan.Roles.ADMIN.value:
+                    return [permissions.IsAuthenticated()]
+                else:
+                    raise exceptions.PermissionDenied()
+        # elif self.action == "get_tac_gia":
+        #     if self.request.data.get('role') == str(TaiKhoan.Roles.TroLySinhVien, TaiKhoan.Roles.CongTacSinhVien):
+        #         return [permissions.IsAuthenticated()]
+
+
+    @action(methods=['get', 'patch'], url_path='current-taikhoan', detail=False)
+    def get_current_user(self, request):
+        user = request.user
+        if request.method.__eq__("PATCH"):
+            for k, v in request.data.items():
+                setattr(user, k, v)  # user.k = v (user.name = v)
+            user.save()
+
+        return Response(serializers.TaiKhoanSerializer(user).data)
+
+    @action(methods=['get'], url_path='is_valid', detail=False)
+    def taikhoan_is_valid(self, request):
+        email = self.request.query_params.get('email')
+        username = self.request.query_params.get('username')
+
+        if email:
+            taikhoan = TaiKhoan.objects.filter(email=email)
+            if taikhoan.exists():
+                return Response(data={'is_valid': "True", 'message': 'Email đã tồn tại'}, status=status.HTTP_200_OK)
+
+        if username:
+            taikhoan = TaiKhoan.objects.filter(username=username)
+            if taikhoan.exists():
+                return Response(data={'is_valid': "True", 'message': 'Username đã tồn tại'},
+                                status=status.HTTP_200_OK)
+
+        return Response(data={'is_valid': "False"}, status=status.HTTP_200_OK)
+
+# class TagViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
+#     queryset = Tag.objects.all()
+#     serializer_class = serializers.TagSerializier
+#
+#     def get_permissions(self):
+#         if self.action in ['create', 'update', 'partial_update', 'destroy']:
+#             if isinstance(self.request.user, AnonymousUser):
+#                 return [permissions.IsAuthenticated()]
+#             else:
+#                 if (self.request.user.is_authenticated and
+#                         self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
+#                                                    TaiKhoan.Roles.TroLySinhVien.value,
+#                                                    TaiKhoan.Roles.ADMIN.value]):
+#                     return [permissions.IsAuthenticated()]
+#                 else:
+#                     raise exceptions.PermissionDenied()
+#
+#         return [permissions.AllowAny()]
+#
+#     def get_queryset(self):
+#         queryset = self.queryset
+#         q = self.request.query_params.get("q")
+#         if q:
+#             queryset = queryset.filter(name__icontains=q)
+#
+#         return queryset
+#
+#     @action(methods=['get'], url_path='baiviets', detail=True)
+#     def get_baiviet(self, request, pk):
+#         baiviet = self.get_object().baiviets.all()
+#         return Response(serializers.BaiVietSerializer(baiviet, many=True).data,
+#                         status=status.HTTP_200_OK)
+
+class TroLySinhVienKhoaViewset(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+    queryset = TroLySinhVien_Khoa.objects.all()
+    serializer_class = serializers.TroLySinhVien_KhoaSerializer
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            if isinstance(self.request.user, AnonymousUser):
+                return [permissions.IsAuthenticated()]
+            else:
+                if (self.request.user.is_authenticated and
+                        self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
+                                                   TaiKhoan.Roles.ADMIN.value]):
+                    return [permissions.IsAuthenticated()]
+                else:
+                    raise exceptions.PermissionDenied()
+        elif self.action == 'get':
+            if (self.request.user.is_authenticated and
+                    self.request.user.role in [TaiKhoan.Roles.TroLySinhVienKhoa.value]):
+                return [permissions.IsAuthenticated()]
+
+        return [permissions.AllowAny()]
+
+    def get_queryset(self):
+        queryset = self.queryset
+        q = self.request.query_params.get('q')
+        if q:
+            queryset = queryset.filter(tai_khoan__ho_ten__icontains=q)
+
+        return queryset
+
+    @action(methods=['get'], url_path='khoa', detail=True)
+    def get_troly(self, request, pk):
+        troly = TroLySinhVien_Khoa.objects.get(pk=pk)
+
+        return Response(serializers.SinhVienSerializer(troly, many=True).data,
+                        status=status.HTTP_200_OK)
+
 
 class ThamGiaViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = ThamGia.objects.all()
@@ -542,129 +728,6 @@ class ThamGiaViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
         if not registered:
             return Response({'registered': False}, status=status.HTTP_200_OK)
         return Response({'registered': True}, status=status.HTTP_200_OK)
-
-
-
-class MinhChungViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
-    queryset = MinhChung.objects.filter(active=True)
-    serializer_class = serializers.MinhChungSerializer
-
-    def get_queryset(self):
-        queryset = self.queryset
-        if self.action == 'list':
-            mssv = self.request.query_params.get('mssv')
-            hoatdong = self.request.query_params.get('hoat_dong')
-            if mssv:
-                sinhvien = SinhVien.objects.get(mssv=mssv)
-                thamgias = ThamGia.objects.filter(sinh_vien=sinhvien)
-                queryset = queryset.filter(tham_gia__in=thamgias)
-            if hoatdong:
-                hoatdongs = HoatDongNgoaiKhoa.objects.filter(ten_HD_NgoaiKhoa__icontains=hoatdong)
-                thamgias = ThamGia.objects.filter(hd_ngoaikhoa__in=hoatdongs)
-                queryset = queryset.filter(tham_gia__in=thamgias)
-
-            return queryset
-
-
-class TaiKhoanViewSet(viewsets.ViewSet, generics.CreateAPIView):
-    queryset = TaiKhoan.objects.filter(is_active=True).all()
-    serializer_class = serializers.TaiKhoanSerializer
-    parser_classes = [parsers.MultiPartParser]
-
-    def get_permissions(self):
-        if self.action in ['taikhoan_is_valid']:
-            return [permissions.AllowAny()]
-        if self.action in ['get_current_user']:
-            return [permissions.IsAuthenticated()]
-        elif self.action == "create":
-            if isinstance(self.request.user, AnonymousUser):
-                if self.request.data and (self.request.data.get('role') == str(TaiKhoan.Roles.SinhVien)):
-                    return [permissions.AllowAny()]
-                else:
-                    return [permissions.IsAuthenticated()]
-            elif self.request.data and self.request.data.get('role') == str(TaiKhoan.Roles.TroLySinhVien):
-                if self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value, TaiKhoan.Roles.ADMIN.value]:
-                    return [permissions.IsAuthenticated()]
-                else:
-                    raise exceptions.PermissionDenied()
-            elif self.request.data and self.request.data.get('role') in [str(TaiKhoan.Roles.CongTacSinhVien),
-                                                                         str(TaiKhoan.Roles.ADMIN)]:
-                if self.request.user.role == TaiKhoan.Roles.ADMIN.value:
-                    return [permissions.IsAuthenticated()]
-                else:
-                    raise exceptions.PermissionDenied()
-
-    @action(methods=['get', 'patch'], url_path='current-taikhoan', detail=False)
-    def get_current_user(self, request):
-        user = request.user
-        if request.method.__eq__("PATCH"):
-            for k, v in request.data.items():
-                setattr(user, k, v)  # user.k = v (user.name = v)
-            user.save()
-
-        return Response(serializers.TaiKhoanSerializer(user).data)
-
-    @action(methods=['get'], url_path='is_valid', detail=False)
-    def taikhoan_is_valid(self, request):
-        email = self.request.query_params.get('email')
-        username = self.request.query_params.get('username')
-
-        if email:
-            taikhoan = TaiKhoan.objects.filter(email=email)
-            if taikhoan.exists():
-                return Response(data={'is_valid': True, 'message': 'Email đã tồn tại'}, status=status.HTTP_200_OK)
-
-        if username:
-            taikhoan = TaiKhoan.objects.filter(username=username)
-            if taikhoan.exists():
-                return Response(data={'is_valid': True, 'message': 'Username đã tồn tại'},
-                                status=status.HTTP_200_OK)
-
-        return Response(data={'is_valid': False}, status=status.HTTP_200_OK)
-
-
-class SinhVienViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.ListAPIView):
-    serializer_class = serializers.SinhVienSerializer
-    # pagination_class = paginators.SinhVienPaginator
-    queryset = SinhVien.objects.all()
-    def get_permissions(self):
-        if self.action == "sinhvien_is_valid":
-            return [permissions.AllowAny()]
-        if self.action in ['create']:
-            return [permissions.AllowAny()]
-        if isinstance(self.request.user, AnonymousUser):                                #AnonymousUser: Người dùng chưa đăng nhập
-            return [permissions.IsAuthenticated()]                                      #Yêu cầu truy cập
-        else:
-            if self.request.user.role == TaiKhoan.Roles.SinhVien:
-                if self.request.user.email == SinhVien.objects.filter(email=self.request.user.email).first().email:
-                    return [permissions.IsAuthenticated()]                                #Cấp quyền truy cập
-                else:
-                    raise exceptions.PermissionDenied()                                 #Từ chối quyền truy cập
-            elif (self.request.user.role == TaiKhoan.Roles.TroLySinhVien or
-                  self.request.user.role == TaiKhoan.Roles.CongTacSinhVien):
-                return [permissions.IsAuthenticated()]
-
-    def get_queryset(self):
-        queryset = self.queryset
-        #if self.action == 'list':
-        q = self.request.query_params.get('ho_ten')
-        if q:
-           queryset = queryset.filter(ho_ten__icontains=q)
-        mssv = self.request.query_params.get('mssv')
-        if mssv:
-            queryset = queryset.filter(mssv=mssv)
-
-        return queryset
-
-    @action(methods=['get', 'patch'], url_path='current-sinhvien', detail=False)
-    def get_current_sv(self, request):
-        sv = SinhVien.objects.get(email=request.user.email)
-        if request.method == "PATCH":
-            for k, v in request.data.items():
-                if hasattr(sv, k):  
-                    setattr(sv, k, v)
-            sv.save()
-        return Response(serializers.SinhVienSerializer(sv).data)
 
 
 class ExportBaoCaoViewLop(APIView):
@@ -965,22 +1028,92 @@ class BaoCaoViewKhoa(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class CalculateDiemRenLuyen(APIView):
+    def post(self, request, sinhvien_id, hk_id):
+        try:
+            sinh_vien = SinhVien.objects.get(id=sinhvien_id)
+            # Lấy tất cả các hoạt động mà sinh viên đã tham gia trong học kỳ đó
+            hoat_dong_tham_gia = ThamGia.objects.filter(sinh_vien=sinh_vien, hd_ngoaikhoa__hk_nh_id=hk_id, trang_thai=ThamGia.TrangThai.DiemDanh)
+
+            # Tính điểm rèn luyện
+            diem_ren_luyen = 0
+            dieu_points = {}
+
+            for tham_gia in hoat_dong_tham_gia:
+                hd_ngoaikhoa = tham_gia.hd_ngoaikhoa
+                dieu_id = hd_ngoaikhoa.dieu.id
+
+                if dieu_id not in dieu_points:
+                    dieu_points[dieu_id] = 0
+
+                dieu_points[dieu_id] += hd_ngoaikhoa.diem_ren_luyen
+
+            for dieu_id, points in dieu_points.items():
+                try:
+                    dieu = Dieu.objects.get(id=dieu_id)
+                    diem_ren_luyen += min(points, dieu.diem_toi_da)
+                except ObjectDoesNotExist:
+                    return Response({'error': f'Dieu với ID {dieu_id} không tồn tại'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+            # Lưu điểm rèn luyện vào bảng DiemRenLuyen
+            diem_ren_luyen_entry, created = DiemRenLuyen.objects.update_or_create(
+                sinh_vien=sinh_vien,
+                hk_nh_id=hk_id,
+                defaults={'diem_tong': diem_ren_luyen}
+            )
+
+            serializer = serializers.DiemRenLuyenSerializer(diem_ren_luyen_entry)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except SinhVien.DoesNotExist:
+            return Response({'error': 'Sinh viên không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            print(e)
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class UploadFileDiemDanh(APIView):
+    def post(self, request, hd_ngoaikhoa_id, *args, **kwargs):
+        serializer = serializers.UploadFileDiemDanhSerializer(data=request.data)
+        if serializer.is_valid():
+            csv_file = serializer.validated_data['file']
+            decoded_file = csv_file.read().decode('utf-8').splitlines()
+            reader = csv.reader(decoded_file)
+
+            errors = []
+            for row in reader:
+                try:
+                    mssv = row[0]
+                    sinh_vien=SinhVien.objects.get(mssv=mssv)
+                    hoatdongnk = HoatDongNgoaiKhoa.objects.get(id=hd_ngoaikhoa_id)
+                    tham_gia = ThamGia.objects.get(
+                        sinh_vien_id=sinh_vien.id,
+                        hd_ngoaikhoa_id=hd_ngoaikhoa_id
+                    )
+                    tham_gia.trang_thai = ThamGia.TrangThai.DiemDanh
+                    # now = datetime.now()
+
+                    # Chuyển đổi thành datetime aware
+                    # if timezone.is_naive(now):
+                    #     now = timezone.make_aware(now, timezone.get_default_timezone())
+                    tham_gia.ngay_diem_danh = timezone.now()
+                    tham_gia.save()
+
+                    CalculateDiemRenLuyen().post(request, sinhvien_id=sinh_vien.id, hk_id=hoatdongnk.hk_nh_id)
+                except ThamGia.DoesNotExist:
+                    errors.append(f"Không tìm thấy tham gia với MSSV {mssv} và HK_NH {hoatdongnk.ten_HD_NgoaiKhoa} trong hoạt động ngoại khóa {hd_ngoaikhoa_id}")
+                except Exception as e:
+                    errors.append(f"Đã xảy ra lỗi với MSSV {mssv}: {str(e)}")
+
+            if errors:
+                print(errors.encode('utf-8'))
+                return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Cập nhật trạng thái thành công!"}, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
-class HocKyNamHocViewset(viewsets.ModelViewSet):
-    queryset = HocKy_NamHoc.objects.all()
-    serializer_class = serializers.HockyNamhocSerializer
 
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            if isinstance(self.request.user, AnonymousUser):
-                return [permissions.IsAuthenticated()]
-            else:
-                if (self.request.user.is_authenticated and
-                        self.request.user.role in [TaiKhoan.Roles.CongTacSinhVien.value,
-                                                   TaiKhoan.Roles.ADMIN.value]):
-                    return [permissions.IsAuthenticated()]
-                else:
-                    raise exceptions.PermissionDenied()
-        return [permissions.AllowAny()]
+

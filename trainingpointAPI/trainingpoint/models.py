@@ -48,7 +48,7 @@ class TroLySinhVien_Khoa(BaseModel):
     khoa = models.ForeignKey(Khoa, on_delete=models.CASCADE)
 
 
-class SinhVien(models.Model):
+class SinhVien(BaseModel):
     mssv = models.CharField(max_length=10, unique=True)
     ho_ten = models.CharField(max_length=255)
     ngay_sinh = models.DateField()
@@ -98,7 +98,8 @@ class HoatDongNgoaiKhoa(BaseModel):
     dieu = models.ForeignKey(Dieu, on_delete=models.CASCADE)
     hk_nh = models.ForeignKey(HocKy_NamHoc, on_delete=models.CASCADE)
     sinh_vien = models.ManyToManyField(SinhVien, through='ThamGia')             #Nhiều SV thamgia HĐ ngoại khóa
-
+    tro_ly = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE,
+                               limit_choices_to={'role': TaiKhoan.Roles.TroLySinhVien})
     def __str__(self):
         return self.ten_HD_NgoaiKhoa
 
@@ -127,12 +128,6 @@ class MinhChung(BaseModel):
     tham_gia = models.ForeignKey(ThamGia, on_delete=models.CASCADE)
 
 
-class Tag(BaseModel):
-    name = models.CharField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
 
 class BaiViet(BaseModel):
     title = models.CharField(max_length=255)
@@ -140,7 +135,7 @@ class BaiViet(BaseModel):
     image = CloudinaryField()
     tro_ly = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, limit_choices_to={'role': TaiKhoan.Roles.TroLySinhVien})
     hd_ngoaikhoa = models.ForeignKey(HoatDongNgoaiKhoa, on_delete=models.CASCADE)
-    tags = models.ManyToManyField(Tag, blank=True, related_name='baiviets')   #Trường ngược: baiviet_set: Truy xuất DS bài viết của 1 Tag
+    # tags = models.ManyToManyField(Tag, blank=True, related_name='baiviets')   #Trường ngược: baiviet_set: Truy xuất DS bài viết của 1 Tag
 
     def __str__(self):
         return self.title

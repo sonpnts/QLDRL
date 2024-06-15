@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, BackHandler, Alert, ScrollView, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { Modal, View, BackHandler, Alert, ScrollView, Keyboard, TouchableWithoutFeedback, RefreshControl , ActivityIndicator} from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import Styles from './Styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import APIs, { endpoints } from '../../configs/APIs';
 import moment from 'moment';
+import { isCloseToBottom } from '../Utils/tobottom';
 
 const CommentModal = ({ visible, onClose, postId }) => {
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState([]);
-    
+    const [loading, setLoading] = React.useState(false);
     const [height, setHeight] = useState(80);
     const [isInputFocused, setInputFocused] = useState(false);
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         if (postId) {
             fetchComments();
         }
-    }, [postId]);
+    }, [postId, page]);
 
     const getAuthor = async (id) => {
         const token = await AsyncStorage.getItem("access-token");
@@ -26,23 +28,40 @@ const CommentModal = ({ visible, onClose, postId }) => {
     }
 
     const fetchComments = async () => {
-        try {
-            const response = await APIs.get(endpoints['lay_binh_luan'](postId));
-            // const fetchedComments = response.data.results;
-            const fetchedComments = response.data;
-            const updatedComments = await Promise.all(fetchedComments.map(async (c) => {
-                const author = await getAuthor(c.id);
-                return { ...c, author: author ? author.username : "Unknown" };
-            }));
-            
-            updatedComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-
-            setComments(updatedComments);
-            
-            // console.log(response.data.results);
-        } catch (error) {
-            console.error('Error fetching comments:', error);
+        if(page>0){
+            try {
+                setLoading(true);
+                const token = await AsyncStorage.getItem("access-token");
+                const res = await APIs.get(endpoints['lay_binh_luan'](postId, page),{
+                    headers:{
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const fetchedComments = res.data.results;
+                const updatedComments = await Promise.all(fetchedComments.map(async (c) => {
+                    const author = await getAuthor(c.id);
+                    return { ...c, author: author ? author.username : "Unknown" };
+                }));
+                updatedComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+                if (res.data.next === null)
+                    setPage(0);
+    
+                if (page === 1)
+                    setComments(updatedComments);
+                else
+                    setComments(current => {
+                        return [...current, ...updatedComments];
+                    });
+               
+            } catch (error) {
+                console.error('Error fetching comments:', error);
+                
+            }
+            finally {
+                setLoading(false);
+            }
         }
+        
     };
 
     const handlePostComment = async () => {
@@ -55,6 +74,8 @@ const CommentModal = ({ visible, onClose, postId }) => {
             });
             Alert.alert('Bình luận thành công!');
             setComment('');
+            setPage(1);
+            setComments([]);
             fetchComments();
             Keyboard.dismiss();
             setInputFocused(false);
@@ -62,6 +83,14 @@ const CommentModal = ({ visible, onClose, postId }) => {
             console.error('Error posting comment:', error);
         }
     };
+
+    const loadMore = ({nativeEvent}) => {
+        if (!loading && page > 0 && isCloseToBottom(nativeEvent)) {
+            setTimeout(() => {
+                setPage(page + 1);
+            }, 100);
+        }
+    }
 
     useEffect(() => {
         const backAction = () => {
@@ -77,22 +106,29 @@ const CommentModal = ({ visible, onClose, postId }) => {
         return () => backHandler.remove();
     }, [onClose]);
 
+
+
     return (
         <Modal visible={visible} animationType="slide" onRequestClose={onClose} transparent={true}>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <TouchableWithoutFeedback >
                 <View style={Styles.modalBackground}>
                     <View style={Styles.modalContainer}>
-                        <ScrollView style={{ width: '100%' }}>
-                            {comments.map((c, index) => (
-                                <View key={index} style={Styles.commentContainer}>
-                                    <Text style={Styles.commentAuthor}>{c.author}</Text>
-                                    <Text style={Styles.commentDate}>
-                                        {moment(c.created_date).format('HH:mm - DD/MM/YYYY ')}
-                                    </Text>
-                                    <Text style={Styles.commentContent}>{c.content}</Text>
-                                </View>
-                            ))}
-                        </ScrollView>
+                        <ScrollView onScroll={loadMore} style={{ width: '100%' }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }} >
+                            <RefreshControl onRefresh={()=> fetchComments()}/>
+                            {loading && <ActivityIndicator />}
+                                {comments.map((c, index) => (
+                                    <View key={index} style={Styles.commentContainer}>
+                                        <Text style={Styles.commentAuthor}>{c.author}</Text>
+                                        <Text style={Styles.commentDate}>
+                                            {moment(c.created_date).format('HH:mm - DD/MM/YYYY ')}
+                                        </Text>
+                                        <Text style={Styles.commentContent}>{c.content}</Text>
+                                    </View>
+                                ))}
+                            {loading && page > 1 && <ActivityIndicator />}
+                            {loading && page > 1 && <Text style={{textAlign: 'center', marginVertical: 10}}>Đang tải...</Text>}
+                            </ScrollView>
+                       
                         <TextInput
                             placeholder="Bình luận...."
                             value={comment}
@@ -104,7 +140,7 @@ const CommentModal = ({ visible, onClose, postId }) => {
                             onContentSizeChange={event => setHeight(event.nativeEvent.contentSize.height)}
                             onFocus={() => setInputFocused(true)}
                             onBlur={() => setInputFocused(false)}
-                            style={[Styles.textInput, { height: height, marginBottom: isInputFocused ? 10 : 0 }]}
+                            style={[Styles.textInput, {marginBottom: isInputFocused ? 200 : 0 }]}
                             onSubmitEditing={handlePostComment}
                         />
                         <View style={Styles.buttonContainer}>

@@ -11,10 +11,11 @@ import React from 'react';
 import MyContext from '../../configs/MyContext';
 import ChatScreen from '../ChatFireBase/ChatScreen';
 import UserInfo from '../TaiKhoan/TaiKhoan';
-// import DiemDanh from '../TroLySinhVien/TestUploadFile';
-import DiemDanh from '../ThongKe/TestUploadFile';
+
+import HoatDong from '../TroLySinhVien/HoatDong';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+import QuanLy from './QuanLy';
 
 // const StackNavigator = () => (
 //     <Stack.Navigator initialRouteName="OTP">
@@ -83,16 +84,40 @@ const Main = ({ navigation }) => {
                 }}
             />
 
-            <Tab.Screen
+            {/* <Tab.Screen
                 name="DiemDanh"
                 component={DiemDanh}
                 options={{
-                    tabBarLabel: 'Bản tin',
+                    tabBarLabel: 'Upload file điểm danh',
                     tabBarIcon: ({ color, size }) => {
                         return <Icon name="book" size={size} color={color} />;
                     },
                 }}
+            /> */}
+
+            
+            {/* <Tab.Screen
+                name="Tạo Hoạt Động"
+                component={HoatDong}
+                options={{
+                    tabBarLabel: 'Tạo hoạt động',
+                    tabBarIcon: ({ color, size }) => {
+                        return <Icon name="home" size={size} color={color} />;
+                    },
+                }}
+            /> */}
+
+                <Tab.Screen
+                name="Quản lý"
+                component={QuanLy}
+                options={{
+                    tabBarLabel: 'Quản lý',
+                    tabBarIcon: ({ color, size }) => {
+                        return <Icon name="cog" size={size} color={color} />;
+                    },
+                }}
             />
+            
             
 
             {/* <Tab.Screen
@@ -107,6 +132,9 @@ const Main = ({ navigation }) => {
                 {() => <ChatScreen user={user} />}
                 
             </Tab.Screen> */}
+
+
+            
 
             {role == 1 && <Tab.Screen
                 

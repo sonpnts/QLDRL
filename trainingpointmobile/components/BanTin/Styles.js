@@ -57,7 +57,7 @@ export default StyleSheet.create({
         marginBottom: 10,
     },
     content: {
-        width: "80%",
+        width: "95%",
         fontSize: 18,
         lineHeight: 24,
         marginBottom: 10,
@@ -82,7 +82,7 @@ export default StyleSheet.create({
     modalContainer: {
         width: '85%',
         backgroundColor: 'white',
-        height: '70%',
+        height: '80%',
         padding: 20,
         borderRadius: 10,
         alignItems: 'center',

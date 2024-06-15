@@ -29,7 +29,7 @@ const OTP = ({ route, navigation }) => {
     const sendEmail = async (email) => {
         try {
             const response = await APIs.post(endpoints['send_mail'], {
-                subject: 'Xác thực mã OTP',
+                subject: 'Xác thực mã OTP tạo tài khoản sinh viên',
                 message: `Mã OTP của bạn là ${randomOTP}`,
                 recipient: email,
             });
