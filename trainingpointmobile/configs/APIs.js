@@ -1,7 +1,7 @@
 import axios from "axios";
 import moment from "moment";
 
-export const BASE_URL = 'http://192.168.1.218:8000/';
+// export const BASE_URL = 'http://192.168.1.218:8000/';
 
 export const formatNS = (dateString) => {
     const [year, month, day] = dateString.split('-');
@@ -13,7 +13,7 @@ export const formatDate = (date) => {
     return moment(date).format(' HH:mm - DD/MM/YYYY');
 };
 
-// const BASE_URL = 'https://sonpnts.pythonanywhere.com/'
+const BASE_URL = 'https://sonpnts.pythonanywhere.com/'
 
 export const endpoints = {
     'bao-cao': '/bao-cao/',

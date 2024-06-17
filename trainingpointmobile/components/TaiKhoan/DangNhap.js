@@ -17,10 +17,10 @@ const DangNhap = ({ navigation }) => {
             let res = await APIs.post(endpoints['dang_nhap'], {
                 'username': username,
                 'password': password,
-                // 'client_id': "ITGERx67yOCQUySK1JXP1XnjBDEmVWvHsKiRziSK",
-                // 'client_secret': "5HEazjuCHoYyiiESfKi71JaePQozLshjXrCofUjWeWbPqQeJ6mmEZKnY2vqgOfVfCyetjURa0rUgemgEAJjnSxfyNNloc7CaEW5QzWFEFXiQ1WUqSVszGFC3duJTN8FI",
-                'client_id': 'YN17cy35cApl9PUiBuPCO0eTKgEEFtVWTV7I67lV',
-                'client_secret': '0LpVpqTQ6fcHCwCSfCqKx0JcEzFfGHnf857IuKgtsf2sl1KX3HdqlpTQBUSGiTUm3CaZeqtYZCMXn59Cqfc79pfKu1LVtNUNbIBbO0JnrfbqvAmB3N9xRCHLhDBJI1YM',
+                'client_id': "ITGERx67yOCQUySK1JXP1XnjBDEmVWvHsKiRziSK",
+                'client_secret': "5HEazjuCHoYyiiESfKi71JaePQozLshjXrCofUjWeWbPqQeJ6mmEZKnY2vqgOfVfCyetjURa0rUgemgEAJjnSxfyNNloc7CaEW5QzWFEFXiQ1WUqSVszGFC3duJTN8FI",
+                // 'client_id': 'YN17cy35cApl9PUiBuPCO0eTKgEEFtVWTV7I67lV',
+                // 'client_secret': '0LpVpqTQ6fcHCwCSfCqKx0JcEzFfGHnf857IuKgtsf2sl1KX3HdqlpTQBUSGiTUm3CaZeqtYZCMXn59Cqfc79pfKu1LVtNUNbIBbO0JnrfbqvAmB3N9xRCHLhDBJI1YM',
                 'grant_type': "password"
             }, {
                 headers: {
