@@ -33,7 +33,7 @@ const ThemTroLySinhVien = ({ navigation }) => {
 
     const change = (field, value) => {
         setAssistant(current => ({ ...current, [field]: value }));
-        setErrors(current => ({ ...current, [field]: "" })); // Clear error message when the field changes
+        setErrors(current => ({ ...current, [field]: "" })); 
     };
 
     const handleChooseAvatar = async () => {
@@ -111,6 +111,7 @@ const ThemTroLySinhVien = ({ navigation }) => {
                                 form.append(key, assistant[key]);
                             }
                         }
+                        
                         let accessToken = await AsyncStorage.getItem('access-token');
                         const resdk = await APIs.post(endpoints['dang_ky'], form, {
                             headers: {
@@ -187,11 +188,6 @@ const ThemTroLySinhVien = ({ navigation }) => {
     return (
         <ScrollView automaticallyAdjustKeyboardInsets={true}>
             <View style={Styles.container}>
-                <View style={Styles.margin_bottom_40}>
-                    <Title numberOfLines={1} ellipsizeMode="tail" style={[Styles.subject, Styles.align_item_center]}>
-                        Thêm trợ lý sinh viên
-                    </Title>
-                </View>
                 {assistant.avatar && (
                     <View style={[Styles.align_item_center, Styles.margin_bottom_20]}>
                         <Image

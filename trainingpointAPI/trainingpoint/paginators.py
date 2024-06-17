@@ -7,8 +7,10 @@ class LopPaginator(pagination.PageNumberPagination):
     page_size = 5
 
 class BaiVietPaginator(pagination.PageNumberPagination):
-    page_size = 8
+    page_size = 5
 
 
 class CommentPaginator(pagination.PageNumberPagination):
     page_size = 5
+
+

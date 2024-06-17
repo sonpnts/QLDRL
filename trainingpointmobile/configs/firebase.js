@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore"; // Thêm dòng này
-import { getAuth } from 'firebase/auth';
-
+import { getFirestore } from "firebase/firestore";
+import { getAuth} from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -13,8 +13,12 @@ const firebaseConfig = {
   appId: "1:694590271865:web:e9186657367b4b1e6b3fa8"
 };
 
-// Initialize Firebase
+
+
+// Khởi tạo Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app); // Thêm dòng này
+const db = getFirestore(app);
 const auth = getAuth(app);
-export { db, auth };
+
+
+export { db, auth, app };

@@ -50,6 +50,7 @@ const DangNhap = ({ navigation }) => {
             let user_role = user.data.role;
             // setUser(user.data);
             setRole(user_role);
+            // console.log(user_role);
             setIsAuthenticated(true);
 
         } catch (ex) {

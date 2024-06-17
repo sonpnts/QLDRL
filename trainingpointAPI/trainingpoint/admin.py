@@ -16,7 +16,6 @@ class TaiKhoanAdmin(admin.ModelAdmin):
             return mark_safe(f"<img width='200' src='{taikhoan.avatar.url}' />")
 
 
-
 admin.site.register(TaiKhoan)
 admin.site.register(Khoa)
 admin.site.register(Lop)
@@ -31,5 +30,3 @@ admin.site.register(BaiViet)
 admin.site.register(Comment)
 admin.site.register(Like)
 admin.site.register(DiemRenLuyen)
-
-

@@ -15,7 +15,8 @@ const DangXuat = ({ navigation }) => {
         if (AsyncStorage.setItem('access-token', "null")) {
             setIsAuthenticated(false);
         }
-
+        AsyncStorage.setItem('firebase-token', "null")
+       
     }
 
 

@@ -3,7 +3,6 @@ from django.urls import path, re_path, include
 from rest_framework import routers
 from trainingpoint import views
 from trainingpoint import send_mail
-
 r = routers.DefaultRouter()
 
 r.register('khoas', views.KhoaViewSet, basename='Khoa')
@@ -13,7 +12,6 @@ r.register('sinhviens', views.SinhVienViewSet, basename='Sinh Viên')
 r.register('dieus', views.DieuViewSet, basename='Điều')
 r.register('hoatdongs', views.HoatDongNgoaiKhoaViewSet, basename='Hoạt Động Ngoại Khóa')
 r.register('baiviets', views.BaiVietViewSet, basename="Bài Viết")
-# r.register('tags', views.TagViewSet, basename="Tag")
 r.register('comments', views.CommentViewset, basename="Comment")
 r.register('diemrenluyens', views.DiemRenLuyenViewset, basename='Điểm Rèn Luyện')
 r.register('thamgias', views.ThamGiaViewSet, basename='Tham Gia')
@@ -26,7 +24,7 @@ urlpatterns = [
     path('bao-cao-khoa/<int:id_khoa>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewKhoa.as_view(), name='Báo cáo theo khoa xuất file'),
     path('thong-ke-lop/<int:id_lop>/<int:id_hoc_ky>/', views.BaoCaoViewLop.as_view(), name='Thống kê theo lớp'),
     path('thong-ke-khoa/<int:id_khoa>/<int:id_hoc_ky>/', views.BaoCaoViewKhoa.as_view(), name='Thống kê theo khoa'),
-    path('tinh-diem-ren-luyen/<int:sinhvien_id>/<int:hk_id>/',views.CalculateDiemRenLuyen.as_view(), name='Tính điểm rèn luyện'),
+    # path('tinh-diem-ren-luyen/<int:sinhvien_id>/<int:hk_id>/',views.CalculateDiemRenLuyen.as_view(), name='Tính điểm rèn luyện'),
     path('upload-diem-danh/<int:hd_ngoaikhoa_id>/', views.UploadFileDiemDanh.as_view(), name='Upload điểm danh'),
 
     path('', include(r.urls))

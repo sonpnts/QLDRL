@@ -1,11 +1,10 @@
 import React from "react";
-import { View, Image, Text, Alert, ActivityIndicator, ScrollView, ToastAndroid } from "react-native";
+import { View, Image, Text, Alert, ActivityIndicator, ScrollView, ToastAndroid, TouchableOpacity } from "react-native";
 import { TextInput as PaperTextInput, Title, Button as PaperButton, Avatar } from "react-native-paper";
 import * as ImagePicker from 'expo-image-picker';
 import APIs, { endpoints } from "../../configs/APIs";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Styles from "./Styles";
-
-
 
 const DangKy = ({ route, navigation }) => {
     const [user, setUser] = React.useState({
@@ -15,7 +14,8 @@ const DangKy = ({ route, navigation }) => {
         "avatar": "",
         'role': "4"
     });
-
+    const [confirmPassword, setConfirmPassword] = React.useState("");
+    const [showPassword, setShowPassword] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [success, setSuccess] = React.useState(false);
     const [errors, setErrors] = React.useState({
@@ -27,7 +27,7 @@ const DangKy = ({ route, navigation }) => {
 
     const change = (field, value) => {
         setUser(current => ({ ...current, [field]: value }));
-        setErrors(current => ({ ...current, [field]: "" })); // Clear error message when the field changes
+        setErrors(current => ({ ...current, [field]: "" })); 
     };
 
     const handleEmailChange = (text) => {
@@ -54,6 +54,11 @@ const DangKy = ({ route, navigation }) => {
         }
     };
 
+
+    const handleConfirmPasswordChange = (text) => {
+        setConfirmPassword(text);
+        setErrors(current => ({ ...current, confirmPassword: "" })); 
+    };
     const validateEmail = (email) => {
         const re = /^\d{10}[a-zA-Z]+@ou\.edu\.vn$/;
         return re.test(email);
@@ -65,7 +70,7 @@ const DangKy = ({ route, navigation }) => {
 
     const validateDangKy = async () => {
         let valid = true;
-        let newErrors = { email: "", username: "", password: "", avatar: "" };
+        let newErrors = { email: "", username: "", password: "", confirmPassword: "", avatar: "" };
 
         if (!validateEmail(user.email)) {
             newErrors.email = 'Email nhập không hợp lệ! Vui lòng nhập dạng 10 số + tên @ou.edu.vn';
@@ -73,6 +78,10 @@ const DangKy = ({ route, navigation }) => {
         }
         if (!validatePassword(user.password)) {
             newErrors.password = 'Password phải có từ 8 ký tự trở lên';
+            valid = false;
+        }
+        if (user.password !== confirmPassword) {
+            newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp!';
             valid = false;
         }
         if (!user.avatar) {
@@ -99,14 +108,14 @@ const DangKy = ({ route, navigation }) => {
                 }
             } catch (ex) {
                 setLoading(false);
-                ToastAndroid.show(ex.message, ToastAndroid.LONG);
+                // ToastAndroid.show(ex.message, ToastAndroid.LONG);
                 Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản sinh viên đã tồn tại!');
             }
 
             if (!tk_valid) {
                 navigation.navigate('OTP', { email: user.email });
             } else {
-                Alert.alert('Có lỗi gì đó xảy ra', message);
+                Alert.alert('Có lỗi gì đó xảy ra', 'Tài khoản sinh viên đã tồn tại!');
             }
         }
     };
@@ -122,7 +131,6 @@ const DangKy = ({ route, navigation }) => {
                         uri: user.avatar.uri,
                         name: user.avatar.fileName ,
                         type: user.avatar.type || 'image/jpeg'
-                        // type: mime.getType(user.avatar.uri) || "image/jpeg"
                     });
                     } else {
                     form.append(key, user[key]);
@@ -143,7 +151,7 @@ const DangKy = ({ route, navigation }) => {
                 
             } catch (ex) {
                 console.log(ex);
-                ToastAndroid.show(ex.message, ToastAndroid.LONG);
+                // ToastAndroid.show(ex.message, ToastAndroid.LONG);
                 Alert.alert('Có lỗi gì đó đã xảy ra trong lúc tạo tài khoản!', ex.message);
             } finally {
                 setLoading(false);
@@ -186,12 +194,7 @@ const DangKy = ({ route, navigation }) => {
 
     return (
         <ScrollView automaticallyAdjustKeyboardInsets={true}>
-            <View style={user.avatar ? Styles.containerlogin : [Styles.containerlogin, { marginTop: 40 }]}>
-                <View style={Styles.margin_bottom_40}>
-                    <Title numberOfLines={1} ellipsizeMode="tail" style={[Styles.subject, Styles.align_item_center]}>
-                        Đăng ký
-                    </Title>
-                </View>
+            <View style={user.avatar ? Styles.containerlogin : [Styles.containerlogin, { marginTop: 100 }]}>
                 {user.avatar && (
                     <View style={[Styles.align_item_center, Styles.margin_bottom_20]}>
                         <Image
@@ -221,15 +224,34 @@ const DangKy = ({ route, navigation }) => {
                     style={Styles.margin_bottom_20}
                 />
                 {errors.username ? <Text style={Styles.error}>{errors.username}</Text> : null}
+                <View style={Styles.passwordContainer}>
                 <PaperTextInput
                     label="Password"
                     value={user.password}
                     onChangeText={handlePasswordChange}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     mode="outlined"
-                    style={Styles.margin_bottom_20}
+                    style={Styles.passwordInput}
                 />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={Styles.showPasswordButton}>
+                    <Icon name={showPassword ? "eye" : "eye-off"} size={24} color="black" />
+                </TouchableOpacity>
+                </View>
                 {errors.password ? <Text style={Styles.error}>{errors.password}</Text> : null}
+                <View style={Styles.passwordContainer}>
+                <PaperTextInput
+                    label="Confirm Password"
+                    value={confirmPassword}
+                    onChangeText={handleConfirmPasswordChange}
+                    secureTextEntry={!showPassword}
+                    mode="outlined"
+                    style={Styles.passwordInput}
+                />
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={Styles.showPasswordButton}>
+                    <Icon name={showPassword ? "eye" : "eye-off"} size={24} color="black" />
+                </TouchableOpacity>
+                </View>
+                {errors.confirmPassword ? <Text style={Styles.error}>{errors.confirmPassword}</Text> : null}
                 {loading ? <ActivityIndicator /> : <>
                     <PaperButton mode="contained" style={Styles.margin_bottom_20} onPress={validateDangKy}>Đăng ký</PaperButton>
                 </>}

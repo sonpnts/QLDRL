@@ -24,12 +24,11 @@ class LopSerializer(serializers.ModelSerializer):
 
 
 
-
 class TaiKhoanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaiKhoan
-        fields = ['id', 'email', 'username', 'password', 'avatar', 'role']
+        fields = ['id', 'email', 'username', 'password', 'avatar', 'role', 'first_name', 'last_name']
         extra_kwargs = {
             'password': {
                 'write_only': True
@@ -38,7 +37,7 @@ class TaiKhoanSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         req = super().to_representation(instance)
-        req['avatar'] = instance.avatar.url  # Đảm bảo lấy đường dẫn của avatar từ instance
+        req['avatar'] = instance.avatar.url
         return req
 
     def create(self, validated_data):
@@ -49,7 +48,7 @@ class TaiKhoanSerializer(serializers.ModelSerializer):
         return taiKhoan
 
 
-class ItemSerializer(serializers.ModelSerializer):  # Minh chứng, tài khoản, bài viết
+class ItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         rep['image'] = instance.image.url
@@ -67,7 +66,7 @@ class HockyNamhocSerializer(serializers.ModelSerializer):
 class DieuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dieu
-        fields = ['ma_dieu','ten_dieu']
+        fields = '__all__'
 
 
 class HoatDongNgoaiKhoaSerializer(serializers.ModelSerializer):
@@ -99,13 +98,12 @@ class ThamGiaSerializer(serializers.ModelSerializer):
 class MinhChungSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         req = super().to_representation(instance)
-        req['anh_minh_chung'] = instance.image.url
+        req['anh_minh_chung'] = instance.anh_minh_chung.url
         return req
 
     class Meta:
         model = MinhChung
         fields = '__all__'
-
 
 
 class BaiVietSerializer(serializers.ModelSerializer):
@@ -118,8 +116,6 @@ class BaiVietSerializer(serializers.ModelSerializer):
         req = super().to_representation(instance)
         req['image'] = instance.image.url
         return req
-
-
 
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -136,7 +132,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class DiemRenLuyenSerializer(serializers.ModelSerializer):
 
-
     class Meta:
         model = DiemRenLuyen
         fields = '__all__'
@@ -145,18 +140,9 @@ class DiemRenLuyenSerializer(serializers.ModelSerializer):
 
 class SinhVienSerializer(serializers.ModelSerializer):
 
-    def create(self, validated_data):
-        data = validated_data.copy()
-        email = data.get('email', '')
-        mssv=email[:10]
-        sinh_vien = SinhVien.objects.create(mssv=mssv, **validated_data)
-        # Lưu đối tượng SinhVien
-
-
-        return sinh_vien
     class Meta:
         model = SinhVien
-        fields = ['id', 'email', 'ho_ten', 'ngay_sinh', 'lop', 'dia_chi', 'gioi_tinh']
+        fields = ['id','mssv', 'email', 'ho_ten', 'ngay_sinh', 'lop', 'dia_chi', 'gioi_tinh']
 
 class AuthenticatedBaiVietTagSerializer(BaiVietSerializer):
     liked = serializers.SerializerMethodField()

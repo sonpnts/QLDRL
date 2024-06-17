@@ -5,7 +5,7 @@ import Styles from './Styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import APIs, { endpoints } from '../../configs/APIs';
 import moment from 'moment';
-import { isCloseToBottom } from '../Utils/tobottom';
+import { isCloseToBottom } from '../Utils/Tobottom';
 
 const CommentModal = ({ visible, onClose, postId }) => {
     const [comment, setComment] = useState('');

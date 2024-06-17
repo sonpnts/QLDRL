@@ -11,18 +11,12 @@ import React from 'react';
 import MyContext from '../../configs/MyContext';
 import ChatScreen from '../ChatFireBase/ChatScreen';
 import UserInfo from '../TaiKhoan/TaiKhoan';
-
-import HoatDong from '../TroLySinhVien/HoatDong';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 import QuanLy from './QuanLy';
+import HDNKChuaDiemDanh from '../SinhVien/HDNKChuaDiemDanh';
+import HDNKDiemDanh from '../SinhVien/HDNKDiemDanh';
 
-// const StackNavigator = () => (
-//     <Stack.Navigator initialRouteName="OTP">
-//         {/* <Stack.Screen name="OTP" component={OTP} /> */}
-//         <Stack.Screen name="Thông tin tài khoản" component={UserInfo}/>
-//     </Stack.Navigator>
-// );
 
 const Main = ({ navigation }) => {
     const [user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole] = React.useContext(MyContext);
@@ -84,55 +78,58 @@ const Main = ({ navigation }) => {
                 }}
             />
 
-            <Tab.Screen
-                name="Nhắn tin"
-                component={ChatScreen}
+            {role == 4 && (<>
+            
+                <Tab.Screen
+                name="Báo thiếu điểm rèn luyện"
+                component={HDNKChuaDiemDanh}
                 options={{
-                    tabBarLabel: 'Nhắn tin',
+                    tabBarLabel: 'Báo thiếu',
+                    tabBarIcon: ({ color, size }) => {
+                        return <Icon name="message" size={size} color={color} />;
+                    },
+                }}
+            />
+            <Tab.Screen
+                name="Xem điểm rèn luyện"
+                component={HDNKDiemDanh}
+                options={{
+                    tabBarLabel: 'Xem điểm rèn luyện',
                     tabBarIcon: ({ color, size }) => {
                         return <Icon name="message" size={size} color={color} />;
                     },
                 }}
             />
 
-            
-            {/* <Tab.Screen
-                name="Tạo Hoạt Động"
-                component={HoatDong}
-                options={{
-                    tabBarLabel: 'Tạo hoạt động',
-                    tabBarIcon: ({ color, size }) => {
-                        return <Icon name="home" size={size} color={color} />;
-                    },
-                }}
-            /> */}
-
                 <Tab.Screen
-                name="Quản lý"
-                component={QuanLy}
+                name="Nhắn tin"
+                component={ChatScreen}
                 options={{
-                    tabBarLabel: 'Quản lý',
+                    tabBarLabel: 'Nhắn tin với trợ lý',
                     tabBarIcon: ({ color, size }) => {
-                        return <Icon name="cog" size={size} color={color} />;
+                        return <Icon name="message" size={size} color={color} />;
                     },
                 }}
             />
             
+            </>)
             
+            }
 
-            {/* <Tab.Screen
-            name="ChatScreen"
-            options={{
-                tabBarLabel: 'Nhắn tin',
-                tabBarIcon: ({ color, size }) => {
-                    return <Icon name="message" size={size} color={color} />;
-                },
-                }}
-            >
-                {() => <ChatScreen user={user} />}
-                
-            </Tab.Screen> */}
+            {role === 2 || role === 3 ? (
+                    <Tab.Screen
+                    name="Quản lý"
+                    component={QuanLy}
+                    options={{
+                        tabBarLabel: 'Quản lý',
+                        tabBarIcon: ({ color, size }) => (
+                        <Icon name="cog" size={size} color={color} />
+                        ),
+                    }}
+                    />
+                ) : null}
 
+        
 
             
 

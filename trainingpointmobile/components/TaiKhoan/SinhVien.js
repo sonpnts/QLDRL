@@ -10,9 +10,10 @@ import { Picker } from '@react-native-picker/picker';
 const SinhVienDangKy = ({ route, navigation }) => {
     const [sv, setSv] = useState({
         "email": "",
+        "mssv": "",
         "ho_ten": "",
         "ngay_sinh": "2000-01-01",
-        "lop": "",
+        "lop": "1",
         "dia_chi": "",
         "gioi_tinh": "1",
     });
@@ -23,13 +24,11 @@ const SinhVienDangKy = ({ route, navigation }) => {
     const [lops, setLops] = useState([]);
     const [tenKhoa, setTenKhoa] = useState(""); // Thêm state để quản lý tên khoa
 
-
-
     const fetchKhoas = async () => {
         try {
             const response = await APIs.get(endpoints['khoa']);
             setKhoas(response.data);
-            console.log(khoas);
+            // console.log(khoas);
         } catch (error) {
             console.error(error);
         }
@@ -39,7 +38,7 @@ const SinhVienDangKy = ({ route, navigation }) => {
         try {
             const response = await APIs.get(`${endpoints['khoa']}${khoaId}/lops/`);
             setLops(response.data);
-            console.log(lops);
+            // console.log(lops);
         } catch (error) {
             console.error(error);
         }
@@ -95,6 +94,7 @@ const SinhVienDangKy = ({ route, navigation }) => {
         setLoading(true);
 
         try {
+            change("mssv", sv.email.slice(0, 10));
             const response = await APIs.post(endpoints['sinh_vien'], sv, {
                 headers: {
                     'Content-Type': 'application/json'
@@ -103,13 +103,13 @@ const SinhVienDangKy = ({ route, navigation }) => {
             if (response.status === 201) {
                 console.log(response.data);
                 Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
-                navigation.replace("DangNhap"); // Quay lại màn hình trước đó
+                navigation.navigate("DangNhap"); // Quay lại màn hình trước đó
             } else {
                 Alert.alert('Thất bại', 'Có lỗi xảy ra, vui lòng thử lại.');
             }
         } catch (error) {
-            ToastAndroid.show(error.message, ToastAndroid.LONG);
-            Alert.alert('Lỗi', 'Có lỗi xảy ra khi cập nhật thông tin.');
+            // ToastAndroid.show(error.message, ToastAndroid.LONG);
+            Alert.alert('Lỗi', error.message);
         } finally {
             setLoading(false);
         }

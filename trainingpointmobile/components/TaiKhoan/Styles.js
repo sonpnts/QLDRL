@@ -77,5 +77,23 @@ export default StyleSheet.create({
     avatar: {
         marginBottom: 50,
     },
+    showPasswordButton: {
+        marginLeft: 10, 
+    },
+    passwordInput: {
+        flex: 1,
+        height: 40, 
+        
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+       
+        borderColor: '#CCCCCC', // Màu border
+        borderRadius: 5, // Bo góc border
+        // paddingHorizontal: 10, // Padding ngang
+    },
+
 
 });

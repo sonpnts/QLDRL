@@ -1,6 +1,6 @@
 // sendMessage.js
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../../configs/firebase" ;
+import { db } from "../../configs/Firebase" ;
 
 const sendMessage = async (chatId, senderId, content) => {
   try {

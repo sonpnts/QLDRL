@@ -45,7 +45,7 @@ class Lop(BaseModel):
 
 class TroLySinhVien_Khoa(BaseModel):
     trolySV = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, limit_choices_to={'role': TaiKhoan.Roles.TroLySinhVien})
-    khoa = models.ForeignKey(Khoa, on_delete=models.CASCADE)
+    khoa = models.ForeignKey(Khoa, on_delete=models.PROTECT)
 
 
 class SinhVien(BaseModel):
@@ -66,7 +66,7 @@ class SinhVien(BaseModel):
         return self.ho_ten
 
 
-class HocKy_NamHoc(models.Model):
+class HocKy_NamHoc(BaseModel):
     class Meta:
         unique_together = ('hoc_ky', 'nam_hoc')
 
@@ -95,10 +95,10 @@ class HoatDongNgoaiKhoa(BaseModel):
     ngay_to_chuc = models.DateTimeField()
     thong_tin = RichTextField(null=True)
     diem_ren_luyen = models.IntegerField(default=5)
-    dieu = models.ForeignKey(Dieu, on_delete=models.CASCADE)
-    hk_nh = models.ForeignKey(HocKy_NamHoc, on_delete=models.CASCADE)
-    sinh_vien = models.ManyToManyField(SinhVien, through='ThamGia')             #Nhiều SV thamgia HĐ ngoại khóa
-    tro_ly = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE,
+    dieu = models.ForeignKey(Dieu, on_delete=models.SET_DEFAULT, default=1)
+    hk_nh = models.ForeignKey(HocKy_NamHoc, on_delete=models.SET_NULL, null=True)
+    sinh_vien = models.ManyToManyField(SinhVien, through='ThamGia')
+    tro_ly = models.ForeignKey(TaiKhoan, on_delete=models.PROTECT,
                                limit_choices_to={'role': TaiKhoan.Roles.TroLySinhVien})
     def __str__(self):
         return self.ten_HD_NgoaiKhoa
@@ -126,16 +126,14 @@ class MinhChung(BaseModel):
     description = RichTextField()
     anh_minh_chung = CloudinaryField()
     tham_gia = models.ForeignKey(ThamGia, on_delete=models.CASCADE)
-
-
+    phan_hoi = RichTextField(null=True)
 
 class BaiViet(BaseModel):
     title = models.CharField(max_length=255)
     content = RichTextField(null=True)
     image = CloudinaryField()
-    tro_ly = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, limit_choices_to={'role': TaiKhoan.Roles.TroLySinhVien})
+    tro_ly = models.ForeignKey(TaiKhoan, on_delete=models.PROTECT, limit_choices_to={'role': TaiKhoan.Roles.TroLySinhVien})
     hd_ngoaikhoa = models.ForeignKey(HoatDongNgoaiKhoa, on_delete=models.CASCADE)
-    # tags = models.ManyToManyField(Tag, blank=True, related_name='baiviets')   #Trường ngược: baiviet_set: Truy xuất DS bài viết của 1 Tag
 
     def __str__(self):
         return self.title
@@ -161,6 +159,7 @@ class DiemRenLuyen(BaseModel):
     sinh_vien = models.ForeignKey(SinhVien, on_delete=models.CASCADE)
     hk_nh = models.ForeignKey(HocKy_NamHoc, on_delete=models.CASCADE)
     diem_tong = models.IntegerField()
+
 
 
     class XepLoai(models.IntegerChoices):

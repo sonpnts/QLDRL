@@ -65,7 +65,7 @@ const OTP = ({ route, navigation }) => {
     return (
         <View style={[Styles.container, Styles.align_item_center, Styles.justify_content_center]}>
             <Title style={[Styles.margin_bottom_40, Styles.subject]}>Nhập mã OTP</Title>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 30 }}>
                 {otp.map((value, index) => (
                     <TextInput
                         key={index}
@@ -77,7 +77,6 @@ const OTP = ({ route, navigation }) => {
                         keyboardType="numeric"
                         maxLength={1}
                         onSubmitEditing={() => {
-                            // Tự động chuyển dấu nháy sang ô tiếp theo nếu chưa ở ô cuối cùng
                             if (index < otp.length - 1) {
                                 refs.current[index + 1].focus();
                             }
@@ -85,7 +84,7 @@ const OTP = ({ route, navigation }) => {
                     />
                 ))}
             </View>
-            <PaperButton mode="contained-tonal" onPress={handleSubmit} >Xác nhận</PaperButton>
+            <PaperButton style={{marginBottom:100}} mode="contained-tonal" onPress={handleSubmit} >Xác nhận</PaperButton>
         </View>
     )}
 
