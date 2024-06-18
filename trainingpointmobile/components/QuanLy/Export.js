@@ -115,6 +115,7 @@ export default function ExportBaoCao() {
 
     const exportReport = async (format) => {
         try {
+            const token = await AsyncStorage.getItem('access-token');
             const formatValue = format === 'csv' ? 1 : 2;
             let url;
             if (reportType === 'khoa') {
@@ -134,13 +135,17 @@ export default function ExportBaoCao() {
             const downloadedFile = await FileSystem.downloadAsync(
                 url,
                 FileSystem.documentDirectory + 'bao_cao.' + format,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
             );
             if (downloadedFile.status === 200) {
-                if (Platform.OS === 'ios') {
-                    await Sharing.shareAsync(downloadedFile.uri);
-                } else {
-                    Alert.alert('Tệp đã được lưu', `Đã lưu báo cáo dưới dạng ${format}`);
-                }
+                await Sharing.shareAsync(downloadedFile.uri);
+                Alert.alert('Tệp đã được lưu', `Đã lưu báo cáo dưới dạng ${format}`);
+                
             } else {
                 Alert.alert('Lỗi', 'Không thể tải xuống báo cáo');
             }

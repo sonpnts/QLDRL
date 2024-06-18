@@ -78,7 +78,7 @@ export default function App({ navigation }) {
             // Đăng nhập thành công, userCredential.user sẽ chứa thông tin người dùng
             const user = userCredential.user;
             setAuthfire(true);
-            console.log('User logged in:', user.uid);
+            // console.log('User logged in:', user.uid);
           })
         .catch((error) => {
           // Xử lý lỗi đăng nhập

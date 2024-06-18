@@ -164,7 +164,11 @@ const BaiViet = ({ baiviet = null, navigation = null }) => {
                 {baiViet.content}
                 {'\n'}
                 Ngày tổ chức: {hoatdong ? formatISODate(hoatdong.ngay_to_chuc) : 'Loading...'}
-              
+                {'\n'}
+                Điểm rèn luyện: {hoatdong ? hoatdong.diem_ren_luyen : 'Loading...'}
+                {'\n'}
+                Điều: {hoatdong ? hoatdong.dieu : 'Loading...'}
+                
                 </Text>
                 {baiViet.content.split(' ').length > maxDisplayWords && !expanded && (
                     <PaperButton onPress={toggleExpand}>Xem thêm</PaperButton>

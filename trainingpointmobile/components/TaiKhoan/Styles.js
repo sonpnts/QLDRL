@@ -15,7 +15,7 @@ export default StyleSheet.create({
         flexWrap: "wrap"
     }, margin: {
         margin: 5
-    }, avatar: {
+    }, avatarres: {
         width: 200,
         height: 200,
         borderRadius: 100
@@ -82,14 +82,14 @@ export default StyleSheet.create({
     },
     passwordInput: {
         flex: 1,
-        height: 40, 
+        height: 50, 
         
     },
     passwordContainer: {
         flexDirection: 'row',
+        width: '100%',
         alignItems: 'center',
         marginBottom: 20,
-       
         borderColor: '#CCCCCC', // Màu border
         borderRadius: 5, // Bo góc border
         // paddingHorizontal: 10, // Padding ngang

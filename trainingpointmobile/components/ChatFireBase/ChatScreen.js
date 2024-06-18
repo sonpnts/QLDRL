@@ -8,7 +8,7 @@ import APIs, { endpoints } from '../../configs/APIs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { set } from 'firebase/database';
 
-const ChatScreen = () => {
+const ChatScreen = ({navigation}) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [chatRooms, setChatRooms] = useState([]);
@@ -19,28 +19,59 @@ const ChatScreen = () => {
 
   const [user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole] = useContext(MyContext);
 
-  useEffect(() => {
-    getKhoa();
+
+
+  const getroom = async () => {
     const unsubscribe = onSnapshot(collection(db, 'chatRooms'), (snapshot) => {
-      let rooms = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
-         if (role === 4 && data.participants.includes(user.id)) {
-          rooms.push({ ...data, id: doc.id });
-        }
-      });
-      if (role === 4) {
-        if (rooms.length > 0) {
-          setSelectedRoom(rooms[0].id); // Chọn phòng đầu tiên mà sinh viên có thể tham gia
+          let rooms = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            console.log(data);
+             if (role === 4 && Array.isArray(data.participants) && data.participants.includes(user.id)) {
+              rooms.push({ ...data, id: doc.id });
+              setChatRooms(rooms);
+            }
+          });
+          if (role === 4) {
+            if (rooms.length > 0) {
+              setSelectedRoom(rooms[0].id); // Chọn phòng đầu tiên mà sinh viên có thể tham gia
+            } else {
+              createChatRoomForStudent(); // Tạo phòng mới nếu không có phòng nào
+            }
+          }
+          
+          setIsLoading(false);
+        });
+        return () => unsubscribe();                        
+
+  }
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('access-token');
+        const response = await APIs.get(endpoints['get_khoa'], {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+        if (response.status === 200) {
+          setKhoa(response.data);
+          console.log(response.data);
+          getroom();
         } else {
-          createChatRoomForStudent(); // Tạo phòng mới nếu không có phòng nào
+          Alert.alert('Error', 'Lỗi khi lấy khoa');
         }
+      } catch (error) {
+        console.error('Lỗi khi lấy khoa:', error);
+        Alert.alert('Error', 'Lỗi khi lấy khoa');
       }
-      // setChatRooms(rooms);
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    };
+
+    fetchData(); 
+
+  }, [role, navigation]);
 
   useEffect(() => {
     if (selectedRoom) {
@@ -57,32 +88,32 @@ const ChatScreen = () => {
     }
   }, [selectedRoom]);
 
-  const getKhoa = async () => {
-    try {
-      const token = await AsyncStorage.getItem('access-token');
-      const response = await APIs.get(endpoints['get_khoa'], {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
-      if (response.status === 200) {
-        setKhoa(response.data);
-        // console.log(response.data);
-      }
-      if(user.role ==4){
-        const svres = await APIs.get(endpoints['current_sinhvien'],{
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+  // const getKhoa = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem('access-token');
+  //     const response = await APIs.get(endpoints['get_khoa'], {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       }
+  //     });
+  //     if (response.status === 200) {
+  //       setKhoa(response.data);
+  //       // console.log(response.data);
+  //     }
+  //     if(user.role ==4){
+  //       const svres = await APIs.get(endpoints['current_sinhvien'],{
+  //         headers: {
+  //           Authorization: `Bearer ${token}`
+  //         }
         
-        });
-        setSv(svres.data);
-      }
-    } catch (error) {
-      console.error('Lỗi khi lấy khoa:', error);
-      Alert.alert('Error', 'Lỗi khi lấy khoa');
-    }
-  }
+  //       });
+  //       setSv(svres.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Lỗi khi lấy khoa:', error);
+  //     Alert.alert('Error', 'Lỗi khi lấy khoa');
+  //   }
+  // }
 
   const createChatRoomForStudent = async () => {
     const token = await AsyncStorage.getItem('access-token');

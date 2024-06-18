@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import { TextInput as PaperTextInput, Button, useTheme, Chip } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import APIs, { endpoints, formatDate } from '../../configs/APIs';
@@ -141,7 +141,11 @@ const CreatePost = ({ route, navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
-
+      <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior='marginbottom'
+      keyboardVerticalOffset={100}
+    >
       <View style={{ marginBottom: 20 }}>
         <Text style={Styles.labelcrepost}>Nội dung:</Text>
         <PaperTextInput
@@ -166,6 +170,7 @@ const CreatePost = ({ route, navigation }) => {
           Đăng bài viết
         </Button>
       )}
+      </KeyboardAvoidingView>
     </ScrollView>
   );
 };

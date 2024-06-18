@@ -283,7 +283,7 @@ class HocKyNamHocViewset(viewsets.ViewSet, generics.ListAPIView):
                     raise exceptions.PermissionDenied()
         return [permissions.AllowAny()]
 
-class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
+class HoatDongNgoaiKhoaViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView, generics.UpdateAPIView):
     queryset = HoatDongNgoaiKhoa.objects.filter(active=True)
     serializer_class = serializers.HoatDongNgoaiKhoaSerializer
 

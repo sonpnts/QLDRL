@@ -108,7 +108,6 @@ const DangKy = ({ route, navigation }) => {
                 }
             } catch (ex) {
                 setLoading(false);
-                // ToastAndroid.show(ex.message, ToastAndroid.LONG);
                 Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản sinh viên đã tồn tại!');
             }
 
@@ -136,7 +135,7 @@ const DangKy = ({ route, navigation }) => {
                     form.append(key, user[key]);
                     }
                 }
-                console.log(form);
+                
                 let res = await APIs.post(endpoints['dang_ky'], form, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
@@ -199,7 +198,7 @@ const DangKy = ({ route, navigation }) => {
                     <View style={[Styles.align_item_center, Styles.margin_bottom_20]}>
                         <Image
                             source={{ uri: user.avatar.uri }}
-                            style={Styles.avatar}
+                            style={Styles.avatarres}
                         />
                     </View>
                 )}
@@ -247,7 +246,7 @@ const DangKy = ({ route, navigation }) => {
                     mode="outlined"
                     style={Styles.passwordInput}
                 />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={Styles.showPasswordButton}>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={Styles.showPasswordButton}>
                     <Icon name={showPassword ? "eye" : "eye-off"} size={24} color="black" />
                 </TouchableOpacity>
                 </View>

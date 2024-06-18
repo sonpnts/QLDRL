@@ -131,19 +131,6 @@ const Main = ({ navigation }) => {
 
         
 
-            
-
-            {role == 1 && <Tab.Screen
-                
-                name="OTP"
-                component={OTP}
-                options={{
-                    tabBarLabel: 'OTP',
-                    tabBarIcon: ({ color, size }) => {
-                        return <Icon name="home" size={size} color={color} />;
-                    },
-                }}
-            />}
             {role == 2 && <Tab.Screen
                 name="ThemTroLySinhVien"
                 component={ThemTroLySinhVien}

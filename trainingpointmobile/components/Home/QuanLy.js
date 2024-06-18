@@ -2,12 +2,15 @@ import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import Styles from "./Styles";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import MyContext from '../../configs/MyContext';
 const QuanLy = ({ navigation }) => {
+  const [user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole] = React.useContext(MyContext);
+
 
   const navigateToScreen = (screenName) => {
     navigation.navigate(screenName);
   };
-  
+
 
 
   return (
@@ -62,13 +65,7 @@ const QuanLy = ({ navigation }) => {
           <Icon name="account-check-outline" size={30} color="white" style={Styles.icon} />
           <Text style={Styles.buttonTextQly}>Điểm danh sinh viên</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          style={Styles.buttonHomePly}
-          onPress={() => navigateToScreen('QuanLyBaoThieu')}
-        >
-          <Icon name="alert" size={30} color="white" style={Styles.icon} />
-          <Text style={Styles.buttonTextQly}>Quản lý báo thiếu</Text>
-        </TouchableOpacity> */}
+
         <TouchableOpacity
           style={Styles.buttonHomePly}
           onPress={() => navigateToScreen('ExportBaoCao')}
@@ -76,7 +73,7 @@ const QuanLy = ({ navigation }) => {
           <Icon name="file" size={30} color="white" style={Styles.icon} />
           <Text style={Styles.buttonTextQly}>Xuất file PDF</Text>
         </TouchableOpacity>
-      
+        {role == 2 &&
         <TouchableOpacity
           style={Styles.buttonHomePly}
           onPress={() => navigateToScreen('ThemTroLySinhVien')}
@@ -84,7 +81,8 @@ const QuanLy = ({ navigation }) => {
           <Icon name="file" size={30} color="white" style={Styles.icon} />
           <Text style={Styles.buttonTextQly}>Thêm trợ lý sinh viên</Text>
         </TouchableOpacity>
-
+        }
+        {role == 3 &&
         <TouchableOpacity
           style={Styles.buttonHomePly}
           onPress={() => navigateToScreen('ChatList')}
@@ -92,10 +90,7 @@ const QuanLy = ({ navigation }) => {
           <Icon name="message" size={30} color="white" style={Styles.icon} />
           <Text style={Styles.buttonTextQly}>Tin nhắn hỗ trợ sinh viên</Text>
         </TouchableOpacity>
-
-      
-
-       
+        }
       </View>
     </View>
 

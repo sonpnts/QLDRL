@@ -173,6 +173,7 @@ const HoatDong = () => {
           style={Styles.input}
           placeholder="Nhập điểm rèn luyện"
           value={hoatDong.diem_ren_luyen}
+          keyboardType="numeric"
           onChangeText={(text) => change('diem_ren_luyen', text)}
         />
 
