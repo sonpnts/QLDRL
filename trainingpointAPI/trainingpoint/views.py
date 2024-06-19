@@ -1060,86 +1060,10 @@ class ExportBaoCaoViewKhoa(APIView):
 
         return response
 
-    # def export_pdf(self, data, khoa, hk):
-    #     pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
-    #     pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', 'timesbd.ttf'))
-    #
-    #     buffer = BytesIO()
-    #     doc = SimpleDocTemplate(buffer, pagesize=letter)
-    #     elements = []
-    #
-    #     # Define styles
-    #     styles = getSampleStyleSheet()
-    #     title_style = ParagraphStyle(
-    #         'title',
-    #         parent=styles['Title'],
-    #         fontName='TimesNewRoman-Bold',
-    #         fontSize=16,
-    #         alignment=1
-    #     )
-    #     header_style = ParagraphStyle(
-    #         'header',
-    #         parent=styles['Normal'],
-    #         fontName='TimesNewRoman',
-    #         fontSize=10,
-    #         alignment=2,
-    #         italic=True
-    #     )
-    #     table_style = TableStyle([
-    #         ('FONT', (0, 0), (-1, -1), 'TimesNewRoman'),
-    #         ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-    #         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-    #         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-    #         ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman-Bold'),
-    #         ('FONTSIZE', (0, 0), (-1, 0), 14),
-    #         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-    #         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-    #         ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    #     ])
-    #
-    #     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    #
-    #     # Add header
-    #     header = Paragraph(f"Ngày in: {now}<br/>Mẫu: Báo cáo điểm rèn luyện", header_style)
-    #     elements.append(header)
-    #     elements.append(Spacer(1, 12))
-    #
-    #     # Add title
-    #     title = Paragraph(f"Báo cáo điểm rèn luyện khoa {khoa}<br/>Học kì {hk}", title_style)
-    #     elements.append(title)
-    #     elements.append(Spacer(1, 12))
-    #
-    #     # Create table data
-    #     data_table = [['Sinh Viên', 'Mã số sinh viên', 'Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại']]
-    #     for item in data:
-    #         data_table.append([
-    #             item['sinh_vien'],
-    #             item['mssv'],
-    #             item['lop'],
-    #             item['khoa'],
-    #             str(item['diem_tong']),
-    #             item['xep_loai']
-    #         ])
-    #
-    #     col_widths = [120, 100, 100, 80, 80]
-    #     # Create table
-    #     table = Table(data_table, colWidths=col_widths)
-    #     table.setStyle(table_style)
-    #     elements.append(table)
-    #
-    #     # Build PDF
-    #     doc.build(elements)
-    #
-    #     file_name = f"bao_cao_diem_ren_luyen_khoa_{khoa}.pdf"
-    #     file_name_ascii = unidecode(file_name).lower()
-    #
-    #     response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-    #     response['Content-Disposition'] = f'attachment; filename="{file_name_ascii}"'
-    #
-    #     buffer.close()
-    #     return response
-
     def export_pdf(self, data, khoa, hk):
+        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+        pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', 'timesbd.ttf'))
+
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         elements = []
@@ -1149,23 +1073,24 @@ class ExportBaoCaoViewKhoa(APIView):
         title_style = ParagraphStyle(
             'title',
             parent=styles['Title'],
+            fontName='TimesNewRoman-Bold',
             fontSize=16,
-            alignment=1,
-            fontName='Helvetica-Bold'  # Sử dụng phông chữ mặc định
+            alignment=1
         )
         header_style = ParagraphStyle(
             'header',
             parent=styles['Normal'],
+            fontName='TimesNewRoman',
             fontSize=10,
             alignment=2,
-            italic=True,
-            fontName='Helvetica-Oblique'  # Sử dụng phông chữ mặc định
+            italic=True
         )
         table_style = TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'TimesNewRoman'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Sử dụng phông chữ mặc định
+            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 14),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
@@ -1213,6 +1138,148 @@ class ExportBaoCaoViewKhoa(APIView):
 
         buffer.close()
         return response
+
+class BaoCaoChiTietSinhVien(APIView):
+    def get(self, request, sinh_vien_id, hoc_ky_id, id_format):
+
+        sinh_vien = SinhVien.objects.get(id=sinh_vien_id)
+        hoc_ky = HocKy_NamHoc.objects.get(id=hoc_ky_id)
+        diem_ren_luyen = DiemRenLuyen.objects.get(sinh_vien=sinh_vien, hk_nh=hoc_ky)
+        tham_gia = ThamGia.objects.filter(sinh_vien=sinh_vien, hd_ngoaikhoa__hk_nh=hoc_ky,
+                                          trang_thai=ThamGia.TrangThai.DiemDanh).select_related('hd_ngoaikhoa__dieu')
+
+        if id_format == 1:
+            csv_response = self.generate_csv(sinh_vien, hoc_ky, diem_ren_luyen, tham_gia)
+            return csv_response
+        elif id_format == 2:
+            pdf_buffer = self.generate_pdf(sinh_vien, hoc_ky, diem_ren_luyen, tham_gia)
+            return HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+
+    def generate_pdf(self, sinh_vien, hoc_ky, diem_ren_luyen, tham_gia):
+        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+        pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', 'timesbd.ttf'))
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'title',
+            parent=styles['Title'],
+            fontName='TimesNewRoman-Bold',
+            fontSize=14,
+            alignment=1
+        )
+        header_style = ParagraphStyle(
+            'header',
+            parent=styles['Normal'],
+            fontName='TimesNewRoman',
+            fontSize=9,
+            alignment=0,
+            italic=True
+        )
+        table_style = TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'TimesNewRoman'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            # ('SPAN', (0, 1), (1, 1)),  # Gộp 2 cột đầu của hàng thứ 2 (tên Điều)
+            ('SPAN', (0, -2), (1, -2)),  # Gộp 2 cột đầu của hàng tổng điểm cuối
+            ('SPAN', (0, -1), (1, -1)),  # Gộp 2 cột đầu của hàng xếp loại cuối
+        ])
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+        header = Paragraph(f"Ngày in: {now}<br/>Mẫu: Báo cáo chi tiết điểm rèn luyện", header_style)
+        elements.append(header)
+        elements.append(Spacer(1, 12))
+
+
+        title = Paragraph(f"Chi tiết điểm rèn luyện sinh viên {sinh_vien.ho_ten}<br/>Học kì {hoc_ky}", title_style)
+        elements.append(title)
+        elements.append(Spacer(1, 12))
+
+
+        data_table = [['STT', 'Minh chứng', 'Điểm SV', 'Điểm tối đa']]
+
+
+        dieu_dict = {}
+        for tg in tham_gia:
+            dieu = tg.hd_ngoaikhoa.dieu
+            if dieu not in dieu_dict:
+                dieu_dict[dieu] = []
+            dieu_dict[dieu].append(tg)
+
+        stt = 1
+        for dieu, tgs in dieu_dict.items():
+
+            total_diem_sv = sum(tg.hd_ngoaikhoa.diem_ren_luyen for tg in tgs)
+            data_table.append([f"Điều {dieu.ma_dieu}", dieu.ten_dieu, total_diem_sv, dieu.diem_toi_da])
+            for tg in tgs:
+                data_table.append([
+                    stt,
+                    tg.hd_ngoaikhoa.ten_HD_NgoaiKhoa,
+                    tg.hd_ngoaikhoa.diem_ren_luyen,
+                    '',
+                ])
+                stt += 1
+
+        data_table.append(['Điểm tổng:', '', diem_ren_luyen.diem_tong, ''])
+        data_table.append(['Xếp loại:', '', diem_ren_luyen.get_xep_loai_display(), ''])
+
+        col_widths = [40, 320, 80, 80]
+
+        table = Table(data_table, colWidths=col_widths)
+        table.setStyle(table_style)
+        elements.append(table)
+
+
+        doc.build(elements)
+
+        buffer.seek(0)
+        return buffer
+
+    def generate_csv(self, sinh_vien, hoc_ky, diem_ren_luyen, tham_gia):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="bao_cao_chi_tiet_diem_ren_luyen_{sinh_vien.mssv}_hk_{hoc_ky.id}.csv"'
+
+        writer = csv.writer(response)
+
+        writer.writerow(['STT', 'Điều', 'Tên hoạt động', 'Điểm SV', 'Điểm tối đa'])
+
+        stt = 1
+        for tg in tham_gia:
+            dieu = tg.hd_ngoaikhoa.dieu
+            writer.writerow([
+                f"{stt}. Điều {dieu.ma_dieu}: {dieu.ten_dieu}",
+                '',
+                '',
+                '',
+            ])
+            writer.writerow([
+                '',
+                '',
+                tg.hd_ngoaikhoa.ten_HD_NgoaiKhoa,  # Tên hoạt động ngoại khóa
+                tg.hd_ngoaikhoa.diem_ren_luyen,
+                '',
+            ])
+            stt += 1
+
+        writer.writerow(['', 'Điểm tổng:', diem_ren_luyen.diem_tong, ''])
+        writer.writerow(['', 'Xếp loại:', diem_ren_luyen.get_xep_loai_display(), ''])
+
+        return response
+
+
+
+
 
 class BaoCaoViewLop(APIView):
     permission_classes = [RolePermission]

@@ -58,7 +58,7 @@ export default StyleSheet.create({
     },
     content: {
         width: "95%",
-        fontSize: 18,
+        fontSize: 16,
         lineHeight: 24,
         marginBottom: 10,
     },

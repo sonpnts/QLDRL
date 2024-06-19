@@ -22,9 +22,9 @@ r.register('trolysinhviens', views.TroLySinhVienKhoaViewset, basename='TroLySinh
 urlpatterns = [
     path('bao-cao-lop/<int:id_lop>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewLop.as_view(), name='Báo cáo theo lớp xuất file'),
     path('bao-cao-khoa/<int:id_khoa>/<int:id_hoc_ky>/<int:id_format>/', views.ExportBaoCaoViewKhoa.as_view(), name='Báo cáo theo khoa xuất file'),
+    path('bao-cao-chi-tiet/<int:sinh_vien_id>/<int:hoc_ky_id>/<int:id_format>/', views.BaoCaoChiTietSinhVien.as_view(), name='Báo cáo chi tiết sinh viên xuất file'),
     path('thong-ke-lop/<int:id_lop>/<int:id_hoc_ky>/', views.BaoCaoViewLop.as_view(), name='Thống kê theo lớp'),
     path('thong-ke-khoa/<int:id_khoa>/<int:id_hoc_ky>/', views.BaoCaoViewKhoa.as_view(), name='Thống kê theo khoa'),
-    # path('tinh-diem-ren-luyen/<int:sinhvien_id>/<int:hk_id>/',views.CalculateDiemRenLuyen.as_view(), name='Tính điểm rèn luyện'),
     path('upload-diem-danh/<int:hd_ngoaikhoa_id>/<int:hk_id>/', views.UploadFileDiemDanh.as_view(), name='Upload điểm danh'),
 
     path('', include(r.urls))

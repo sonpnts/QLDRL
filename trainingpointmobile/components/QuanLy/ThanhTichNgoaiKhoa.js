@@ -3,8 +3,11 @@ import { View, Button, ScrollView, Text, StyleSheet, Alert } from 'react-native'
 import { Title } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
 import { Table, Row } from 'react-native-table-component';
-import APIs, { endpoints } from '../../configs/APIs';
+import APIs, { endpoints, BASE_URL } from '../../configs/APIs';
 import { useRoute } from '@react-navigation/native';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ThanhTichNgoaiKhoa = () => {
@@ -118,6 +121,35 @@ const ThanhTichNgoaiKhoa = () => {
         hoatDongDiemDanh.some(hoatDong => hoatDong.dieu == dieu.ma_dieu)
     );
 
+    const handleExportReport = async (format) => {
+        try {
+            const token = await AsyncStorage.getItem('access-token');
+            const formatValue = format === 'csv' ? 1 : 2;
+
+            let url = `${BASE_URL}bao-cao-chi-tiet/${sv.id}/${selectedHocKyNamHoc}/${formatValue}/`;
+
+            const downloadedFile = await FileSystem.downloadAsync(
+                url,
+                FileSystem.documentDirectory + `bao_cao_${format}.` + format,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                }
+            );
+
+            if (downloadedFile.status === 200) {
+                await Sharing.shareAsync(downloadedFile.uri);
+                Alert.alert('Tệp đã được lưu', `Đã lưu báo cáo dưới dạng ${format}`);
+            } else {
+                Alert.alert('Lỗi', 'Không thể tải xuống báo cáo');
+            }
+        } catch (error) {
+            Alert.alert('Lỗi', error.message);
+        }
+    };
+
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.dropdownContainer}>
@@ -146,6 +178,11 @@ const ThanhTichNgoaiKhoa = () => {
             ) : (
                 <Text style={styles.infoText}>Không tìm thấy thông tin sinh viên</Text>
             )}
+            <Button title="Xuất PDF" onPress={() => handleExportReport('pdf')} />
+
+            {/* Thêm nút xuất file CSV */}
+            <Button title="Xuất CSV" onPress={() => handleExportReport('csv')} />
+
 
 
             <View style={styles.tableContainer}>

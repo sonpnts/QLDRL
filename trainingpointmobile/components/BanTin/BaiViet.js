@@ -168,7 +168,6 @@ const BaiViet = ({ baiviet = null, navigation = null }) => {
                 Điểm rèn luyện: {hoatdong ? hoatdong.diem_ren_luyen : 'Loading...'}
                 {'\n'}
                 Điều: {hoatdong ? hoatdong.dieu : 'Loading...'}
-                
                 </Text>
                 {baiViet.content.split(' ').length > maxDisplayWords && !expanded && (
                     <PaperButton onPress={toggleExpand}>Xem thêm</PaperButton>

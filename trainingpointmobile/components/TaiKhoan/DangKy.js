@@ -102,7 +102,7 @@ const DangKy = ({ route, navigation }) => {
                 if (check.status == 200) {
                     const res = check.data.is_valid;
                     if (res) {
-                        
+                        tk_valid= true;
                         message = check.data.message;
                     }
                 }

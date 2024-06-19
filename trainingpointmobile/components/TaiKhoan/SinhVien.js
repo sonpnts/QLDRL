@@ -1,46 +1,64 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Alert, ActivityIndicator, ToastAndroid, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { useRoute } from '@react-navigation/native';
+import { View, ScrollView, Alert, ActivityIndicator, ToastAndroid, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput as PaperTextInput, Title, Button as PaperButton, Button } from 'react-native-paper';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import APIs, { endpoints } from "../../configs/APIs";
 import Styles from './Styles';
 import { Picker } from '@react-native-picker/picker';
+import { count } from 'firebase/firestore';
 
 
-const SinhVienDangKy = ({ route, navigation }) => {
+const SinhVienDangKy = ({ navigation }) => {
+    const route = useRoute();
+
+    const email_sv  = route.params.email;
+
     const [sv, setSv] = useState({
-        "email": "",
-        "mssv": "",
+        "email": email_sv || "",
+        "mssv": email_sv ? email_sv.slice(0, 10) : "",
         "ho_ten": "",
         "ngay_sinh": "2000-01-01",
-        "lop": "1",
+        "lop": "",
         "dia_chi": "",
         "gioi_tinh": "1",
     });
+
     const [loading, setLoading] = useState(false);
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-    const [gioiTinh, setGioiTinh] = useState(""); // Trường state để lưu giới tính được chọn
+    const [gioiTinh, setGioiTinh] = useState(""); 
+    const [selectedKhoa, setSelectedKhoa] = useState('');
+    const [selectedLop, setSelectedLop] = useState('');
     const [khoas, setKhoas] = useState([]);
     const [lops, setLops] = useState([]);
-    const [tenKhoa, setTenKhoa] = useState(""); // Thêm state để quản lý tên khoa
+
 
     const fetchKhoas = async () => {
         try {
             const response = await APIs.get(endpoints['khoa']);
-            setKhoas(response.data);
-            // console.log(khoas);
+            if (response.data && Array.isArray(response.data)) {
+                setKhoas(response.data);
+            } else {
+                setKhoas([]);
+                console.error('Dữ liệu trả về không phải là một mảng');
+            }
         } catch (error) {
             console.error(error);
+            Alert.alert('Lỗi', 'Không thể tải dữ liệu khoa');
         }
     };
-
     const fetchLops = async (khoaId) => {
         try {
             const response = await APIs.get(`${endpoints['khoa']}${khoaId}/lops/`);
-            setLops(response.data);
-            // console.log(lops);
+            if (response.data && Array.isArray(response.data)) {
+                setLops(response.data);
+            } else {
+                setLops([]);
+                console.error('Dữ liệu trả về không phải là một mảng');
+            }
         } catch (error) {
             console.error(error);
+            Alert.alert('Lỗi', 'Không thể tải dữ liệu lớp');
         }
     };
 
@@ -52,14 +70,12 @@ const SinhVienDangKy = ({ route, navigation }) => {
         setDatePickerVisibility(false);
     };
 
-
     const handleConfirm = (date) => {
-        const selectedDate = date.toISOString().slice(0, 10); // Lấy ra phần yyyy-MM-dd
+        const selectedDate = date.toISOString().slice(0, 10); 
         change("ngay_sinh", selectedDate);
         hideDatePicker();
     };
 
-    // Hàm chuyển đổi định dạng ngày từ yyyy-MM-dd sang dd/MM/yyyy
     const formatDate = (dateString) => {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
@@ -70,12 +86,15 @@ const SinhVienDangKy = ({ route, navigation }) => {
             return { ...current, [field]: value }
         });
     };
-    // lấy thống tin từ màn hình đăng ký bỏ sang
-    React.useEffect(() => {
-        if (route.params?.email) {
-            change("email", route.params.email);
+
+    useEffect(() => {
+        console.log(email_sv);
+        console.log(route.params.email);
+        if (email_sv) {
+            change("email", email_sv);
+            change("mssv", email_sv.slice(0, 10));
         }
-    }, [route.params?.email]);
+    }, [email_sv]);
 
     const validateFields = () => {
         if (!sv.email || !sv.ho_ten || !sv.ngay_sinh || !sv.lop || !sv.dia_chi || !sv.gioi_tinh) {
@@ -85,16 +104,21 @@ const SinhVienDangKy = ({ route, navigation }) => {
         return true;
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         fetchKhoas();
     }, []);
+
+    useEffect(() => {
+        if (selectedKhoa) {
+            fetchLops(selectedKhoa);
+        }
+    }, [selectedKhoa]);
 
     const capNhatThongTin = async () => {
         if (!validateFields()) return;
         setLoading(true);
 
         try {
-            change("mssv", sv.email.slice(0, 10));
             const response = await APIs.post(endpoints['sinh_vien'], sv, {
                 headers: {
                     'Content-Type': 'application/json'
@@ -103,12 +127,12 @@ const SinhVienDangKy = ({ route, navigation }) => {
             if (response.status === 201) {
                 console.log(response.data);
                 Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
-                navigation.navigate("DangNhap"); // Quay lại màn hình trước đó
+                // navigation.navigate('DangNhap');
+                navigation.goBack(); 
             } else {
                 Alert.alert('Thất bại', 'Có lỗi xảy ra, vui lòng thử lại.');
             }
         } catch (error) {
-            // ToastAndroid.show(error.message, ToastAndroid.LONG);
             Alert.alert('Lỗi', error.message);
         } finally {
             setLoading(false);
@@ -137,6 +161,7 @@ const SinhVienDangKy = ({ route, navigation }) => {
                     autoCapitalize="none"
                     mode="outlined"
                     style={Styles.margin_bottom_20}
+                    editable={false}
                 />
                 <PaperTextInput
                     label="Họ tên"
@@ -153,7 +178,7 @@ const SinhVienDangKy = ({ route, navigation }) => {
                             value={formatDate(sv.ngay_sinh)}
                             mode="outlined"
                             style={Styles.margin_bottom_20}
-                            editable={false} // Không cho phép chỉnh sửa trực tiếp
+                            editable={false} 
                         />
                     </View>
                 </TouchableOpacity>
@@ -164,43 +189,47 @@ const SinhVienDangKy = ({ route, navigation }) => {
                     onCancel={hideDatePicker}
                 />
 
-                <View style={[Styles.margin_bottom_20, { borderColor: '#000', borderWidth: 1, borderRadius: 4 }]}>
+            <View style={[Styles.margin_bottom_20, { borderColor: '#000', borderWidth: 1, borderRadius: 4 }]}>
                 <Picker
-                    selectedValue={tenKhoa}
-                    onValueChange={(itemValue, itemIndex) => {
-                        setTenKhoa(itemValue);
-                        fetchLops(itemValue);
-                    }}
+                    selectedValue={selectedKhoa}
+                    onValueChange={(itemValue) => setSelectedKhoa(itemValue)}
                     mode="dropdown"
                 >
-                    <Picker.Item label="Chọn khoa" value="" />
-                    {khoas.map(khoa => (
-                        <Picker.Item key={khoa.id} label={khoa.ten_khoa} value={khoa.id} />
+                <Picker.Item label="Chọn khoa" value="" />
+                {khoas.map(khoa => (
+                <Picker.Item key={khoa.id} label={khoa.ten_khoa} value={khoa.id} />
+                ))}
+                </Picker>
+            </View>
+
+            <View style={{ borderColor: '#000', borderWidth: 1, borderRadius: 4, marginBottom: 20 }}>
+                <Picker
+                    selectedValue={selectedLop}
+                    onValueChange={(itemValue) => {
+                        setSelectedLop(itemValue);
+                        change("lop", itemValue);
+                    }}
+                    mode="dropdown"
+                    enabled={!!selectedKhoa}
+                >
+                <Picker.Item label="Chọn lớp" value="" />
+                    {lops.map(lop => (
+                        <Picker.Item key={lop.id} label={lop.ten_lop} value={lop.id} />
                     ))}
                 </Picker>
             </View>
 
+            {/* <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}> */}
+                <KeyboardAvoidingView enabled>
+                    <PaperTextInput
+                        label="Địa chỉ"
+                        value={sv.dia_chi}
+                        onChangeText={(value) => change("dia_chi", value)}
+                        mode="outlined"
+                        style={Styles.margin_bottom_20}
+                    />
+                </KeyboardAvoidingView>
 
-                <View style={[Styles.margin_bottom_20, { borderColor: '#000', borderWidth: 1, borderRadius: 4 }]}>
-                    <Picker
-                        selectedValue={sv.lop}
-                        onValueChange={(itemValue) => change("lop", itemValue)}
-                        mode="dropdown"
-                    >
-                        <Picker.Item label="Chọn lớp" value="" />
-                        {lops.map(lop => (
-                            <Picker.Item key={lop.id} label={lop.ten_lop} value={lop.id} />
-                        ))}
-                    </Picker>
-                </View>
-                <PaperTextInput
-                    label="Địa chỉ"
-                    value={sv.dia_chi}
-                    onChangeText={(value) => change("dia_chi", value)}
-                    mode="outlined"
-                    style={Styles.margin_bottom_20}
-                />
-                {/* Dropdown menu cho giới tính */}
                 <View style={[Styles.margin_bottom_20, { borderColor: '#000', borderWidth: 1, borderRadius: 4 }]}>
                     <Picker
                         selectedValue={gioiTinh}
@@ -214,7 +243,7 @@ const SinhVienDangKy = ({ route, navigation }) => {
                         <Picker.Item label="Nữ" value="Nữ" />
                     </Picker>
                 </View>
-                <PaperButton mode="contained" style={Styles.margin_bottom_20} onPress={capNhatThongTin}>Cập nhật</PaperButton>
+                <PaperButton mode="contained" style={Styles.margin_bottom_20} onPress={capNhatThongTin}>Cập nhật</PaperButton>   
             </View>
         </ScrollView>
     );

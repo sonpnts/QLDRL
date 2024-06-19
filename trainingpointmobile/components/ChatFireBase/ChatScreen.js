@@ -4,7 +4,7 @@ import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingVi
 import { collection, addDoc, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '../../configs/Firebase';
 import MyContext from '../../configs/MyContext';
-import APIs, { endpoints } from '../../configs/APIs';
+import APIs, { authAPI, endpoints } from '../../configs/APIs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { set } from 'firebase/database';
 
@@ -37,11 +37,9 @@ const ChatScreen = ({navigation}) => {
               createChatRoomForStudent(); // Tạo phòng mới nếu không có phòng nào
             }
           }
-          
           setIsLoading(false);
         });
-        return () => unsubscribe();                        
-
+        return () => unsubscribe(); 
   }
 
 
@@ -49,15 +47,19 @@ const ChatScreen = ({navigation}) => {
     const fetchData = async () => {
       try {
         const token = await AsyncStorage.getItem('access-token');
-        const response = await APIs.get(endpoints['get_khoa'], {
+        const svres = await APIs.get(endpoints['current_sinhvien'],{
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
           }
+        
         });
+        console.log(svres.data);
+        setSv(svres.data);
+        
+        const response = await authAPI(token).get(endpoints['get_khoa']);
         if (response.status === 200) {
           setKhoa(response.data);
-          console.log(response.data);
-          getroom();
+          // getroom();
         } else {
           Alert.alert('Error', 'Lỗi khi lấy khoa');
         }
@@ -69,6 +71,13 @@ const ChatScreen = ({navigation}) => {
     fetchData(); 
 
   }, [role, navigation]);
+
+  useEffect(() => {
+    
+    if (khoa) {
+      getroom();
+    }
+  }, [khoa]);
 
   useEffect(() => {
     if (selectedRoom) {
@@ -87,20 +96,12 @@ const ChatScreen = ({navigation}) => {
 
 
   const createChatRoomForStudent = async () => {
-    const token = await AsyncStorage.getItem('access-token');
-    const svres = await APIs.get(endpoints['current_sinhvien'],{
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    
-    });
-    setSv(svres.data);
     try {
       const newRoom = await addDoc(collection(db, 'chatRooms'), {
         createdAt: Timestamp.now(),
         participants: [user.id],
-        mssv: svres.data.mssv,
-        ten_sv: svres.data.ho_ten,
+        mssv: sv.mssv,
+        ten_sv: sv.ho_ten,
         khoa: khoa.id,
       });
       setSelectedRoom(newRoom.id);
