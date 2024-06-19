@@ -160,8 +160,6 @@ class DiemRenLuyen(BaseModel):
     hk_nh = models.ForeignKey(HocKy_NamHoc, on_delete=models.CASCADE)
     diem_tong = models.IntegerField()
 
-
-
     class XepLoai(models.IntegerChoices):
         XUATSAC = 1, 'Xuất Sắc'
         GIOI = 2, 'Giỏi'

@@ -137,8 +137,8 @@ export default function ExportBaoCao() {
                 FileSystem.documentDirectory + 'bao_cao.' + format,
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                        
                     },
                 }
             );

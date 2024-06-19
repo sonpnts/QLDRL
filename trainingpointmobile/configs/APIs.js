@@ -13,7 +13,7 @@ export const formatDate = (date) => {
     return moment(date).format(' HH:mm - DD/MM/YYYY');
 };
 
-const BASE_URL = 'https://sonpnts.pythonanywhere.com/'
+export const BASE_URL = 'https://sonpnts.pythonanywhere.com/'
 
 export const endpoints = {
     'bao-cao': '/bao-cao/',
@@ -27,12 +27,12 @@ export const endpoints = {
     'dang_ky': '/taikhoans/',
     'dang_ky_hoat_dong': (hoat_dong_id) => `/thamgias/${hoat_dong_id}/dang-ky-hoat-dong/`,
     'dang_nhap': '/o/token/',
-    'diemdanh': (hd_ngoaikhoa_id) => `/upload-diem-danh/${hd_ngoaikhoa_id}/`,
+    'diemdanh': (hd_ngoaikhoa_id, id_hoc_ky) => `/upload-diem-danh/${hd_ngoaikhoa_id}/${id_hoc_ky}/`,
     'dieu': '/dieus/',
     'hocky': '/hockinamhocs/',
     'hoat_dong': (hoat_dong_id) => `/hoatdongs/${hoat_dong_id}/`,
     'hd':'/hoatdongs/',
-    'hoat_dong_diem_danh': '/hoatdongs/diemdanh/',
+    'upload_diem_danh': '/hoatdongs/diemdanh/',
     'quan_ly_hoat_dong': '/hoatdongs/quanly/',
     'hoat_dong_tao_bai_viet':'hoatdongs/chua-co-bai-viet/',
     'kiem_tra_dang_ky': (hoat_dong_id) => `/thamgias/${hoat_dong_id}/kiem-tra-dang-ky/`,
@@ -63,7 +63,8 @@ export const endpoints = {
     'hoatdong': '/hoatdongs/',
     'hoat_dong_diem_danh': (sinhvien_id, hk_id) => `/thamgias/hoat-dong-diem-danh/${sinhvien_id}/${hk_id}/`,
     'hoat_dong_chua_diem_danh': (sinhvien_id, hk_id) => `/thamgias/hoat-dong-chua-diem-danh/${sinhvien_id}/${hk_id}/`,
-    'tinh_diem_ren_luyen': (sinhvien_id, hk_id) => `/tinh-diem-ren-luyen/${sinhvien_id}/${hk_id}/`,
+    // 'tinh_diem_ren_luyen': (sinhvien_id, hk_id) => `/diemrenluyens/calculate/${sinhvien_id}/${hk_id}/`,
+    'tinh_diem' : `/diemrenluyens/calculate/`,
     'tham_gia': (thamgia_id) => `/thamgias/${thamgia_id}/`,
     'tham_gia_bao_thieu': '/thamgias/baothieu/',
     'minh_chung' : '/minhchungs/',

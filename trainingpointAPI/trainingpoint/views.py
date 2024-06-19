@@ -234,6 +234,7 @@ class DiemRenLuyenViewset(viewsets.ViewSet, generics.ListCreateAPIView):
                 hk_nh_id=id_hoc_ky,
                 defaults={'diem_tong': diem_ren_luyen}
             )
+            diem_ren_luyen_entry.save()
 
             serializer = serializers.DiemRenLuyenSerializer(diem_ren_luyen_entry)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1059,10 +1060,86 @@ class ExportBaoCaoViewKhoa(APIView):
 
         return response
 
-    def export_pdf(self, data, khoa, hk):
-        pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
-        pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', 'timesbd.ttf'))
+    # def export_pdf(self, data, khoa, hk):
+    #     pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
+    #     pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', 'timesbd.ttf'))
+    #
+    #     buffer = BytesIO()
+    #     doc = SimpleDocTemplate(buffer, pagesize=letter)
+    #     elements = []
+    #
+    #     # Define styles
+    #     styles = getSampleStyleSheet()
+    #     title_style = ParagraphStyle(
+    #         'title',
+    #         parent=styles['Title'],
+    #         fontName='TimesNewRoman-Bold',
+    #         fontSize=16,
+    #         alignment=1
+    #     )
+    #     header_style = ParagraphStyle(
+    #         'header',
+    #         parent=styles['Normal'],
+    #         fontName='TimesNewRoman',
+    #         fontSize=10,
+    #         alignment=2,
+    #         italic=True
+    #     )
+    #     table_style = TableStyle([
+    #         ('FONT', (0, 0), (-1, -1), 'TimesNewRoman'),
+    #         ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+    #         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+    #         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    #         ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman-Bold'),
+    #         ('FONTSIZE', (0, 0), (-1, 0), 14),
+    #         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+    #         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+    #         ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    #     ])
+    #
+    #     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #
+    #     # Add header
+    #     header = Paragraph(f"Ngày in: {now}<br/>Mẫu: Báo cáo điểm rèn luyện", header_style)
+    #     elements.append(header)
+    #     elements.append(Spacer(1, 12))
+    #
+    #     # Add title
+    #     title = Paragraph(f"Báo cáo điểm rèn luyện khoa {khoa}<br/>Học kì {hk}", title_style)
+    #     elements.append(title)
+    #     elements.append(Spacer(1, 12))
+    #
+    #     # Create table data
+    #     data_table = [['Sinh Viên', 'Mã số sinh viên', 'Lớp', 'Khoa', 'Điểm Tổng', 'Xếp Loại']]
+    #     for item in data:
+    #         data_table.append([
+    #             item['sinh_vien'],
+    #             item['mssv'],
+    #             item['lop'],
+    #             item['khoa'],
+    #             str(item['diem_tong']),
+    #             item['xep_loai']
+    #         ])
+    #
+    #     col_widths = [120, 100, 100, 80, 80]
+    #     # Create table
+    #     table = Table(data_table, colWidths=col_widths)
+    #     table.setStyle(table_style)
+    #     elements.append(table)
+    #
+    #     # Build PDF
+    #     doc.build(elements)
+    #
+    #     file_name = f"bao_cao_diem_ren_luyen_khoa_{khoa}.pdf"
+    #     file_name_ascii = unidecode(file_name).lower()
+    #
+    #     response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    #     response['Content-Disposition'] = f'attachment; filename="{file_name_ascii}"'
+    #
+    #     buffer.close()
+    #     return response
 
+    def export_pdf(self, data, khoa, hk):
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         elements = []
@@ -1072,24 +1149,23 @@ class ExportBaoCaoViewKhoa(APIView):
         title_style = ParagraphStyle(
             'title',
             parent=styles['Title'],
-            fontName='TimesNewRoman-Bold',
             fontSize=16,
-            alignment=1
+            alignment=1,
+            fontName='Helvetica-Bold'  # Sử dụng phông chữ mặc định
         )
         header_style = ParagraphStyle(
             'header',
             parent=styles['Normal'],
-            fontName='TimesNewRoman',
             fontSize=10,
             alignment=2,
-            italic=True
+            italic=True,
+            fontName='Helvetica-Oblique'  # Sử dụng phông chữ mặc định
         )
         table_style = TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'TimesNewRoman'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'TimesNewRoman-Bold'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Sử dụng phông chữ mặc định
             ('FONTSIZE', (0, 0), (-1, 0), 14),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
@@ -1223,7 +1299,7 @@ class BaoCaoViewKhoa(APIView):
 
 class UploadFileDiemDanh(APIView):
     permission_classes = [RolePermission]
-    def post(self, request, hd_ngoaikhoa_id, *args, **kwargs):
+    def post(self, request, hd_ngoaikhoa_id, hk_id , *args, **kwargs):
         serializer = serializers.UploadFileDiemDanhSerializer(data=request.data)
         if serializer.is_valid():
             csv_file = serializer.validated_data['file']
@@ -1245,14 +1321,14 @@ class UploadFileDiemDanh(APIView):
                     tham_gia.save()
 
                     # CalculateDiemRenLuyen().post(request, sinhvien_id=sinh_vien.id, hk_id=hoatdongnk.hk_nh_id)
-                    DiemRenLuyenViewset.calculate_diem_ren_luyen(request ,sinh_vien.id, hoatdongnk.hk_nh_id)
+                    DiemRenLuyenViewset.calculate_diem_ren_luyen(self=self,request=request, id_sinh_vien = sinh_vien.id, id_hoc_ky=hk_id)
                 except ThamGia.DoesNotExist:
                     errors.append(f"Không tìm thấy tham gia với MSSV {mssv} và HK_NH {hoatdongnk.ten_HD_NgoaiKhoa} trong hoạt động ngoại khóa {hd_ngoaikhoa_id}")
                 except Exception as e:
                     errors.append(f"Đã xảy ra lỗi với MSSV {mssv}: {str(e)}")
 
             if errors:
-                print(errors.encode('utf-8'))
+                print(errors)
                 return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
             return Response({"message": "Cập nhật trạng thái thành công!"}, status=status.HTTP_201_CREATED)
 

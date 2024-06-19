@@ -25,7 +25,7 @@ urlpatterns = [
     path('thong-ke-lop/<int:id_lop>/<int:id_hoc_ky>/', views.BaoCaoViewLop.as_view(), name='Thống kê theo lớp'),
     path('thong-ke-khoa/<int:id_khoa>/<int:id_hoc_ky>/', views.BaoCaoViewKhoa.as_view(), name='Thống kê theo khoa'),
     # path('tinh-diem-ren-luyen/<int:sinhvien_id>/<int:hk_id>/',views.CalculateDiemRenLuyen.as_view(), name='Tính điểm rèn luyện'),
-    path('upload-diem-danh/<int:hd_ngoaikhoa_id>/', views.UploadFileDiemDanh.as_view(), name='Upload điểm danh'),
+    path('upload-diem-danh/<int:hd_ngoaikhoa_id>/<int:hk_id>/', views.UploadFileDiemDanh.as_view(), name='Upload điểm danh'),
 
     path('', include(r.urls))
 ]

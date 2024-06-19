@@ -144,16 +144,16 @@ const BaiViet = ({ baiviet = null, navigation = null }) => {
 
     React.useEffect(() => {
         if (baiviet) {
-                setBaiViet(baiviet);
-                // console.log(baiviet);
-                getHoatDong(baiviet.hd_ngoaikhoa);
-                getAuthor(baiviet.id);
-                checkLiked(baiviet.id);
-                if(role==4){
-                    checkRegister(baiviet.hd_ngoaikhoa);
-                    
-                }
+            setBaiViet(baiviet);
+            // console.log(baiviet);
+            getHoatDong(baiviet.hd_ngoaikhoa);
+            getAuthor(baiviet.id);
+            checkLiked(baiviet.id);
+            if(role==4){
+                checkRegister(baiviet.hd_ngoaikhoa);
+                
             }
+        }
     }, [baiviet]);
 
     return (

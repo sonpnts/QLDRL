@@ -23,12 +23,13 @@ const DiemDanh = ({ navigation }) => {
         const token = await AsyncStorage.getItem("access-token");
 
         try {
-            const response = await APIs.get(`${endpoints['hoat_dong_diem_danh']}?hoc_ky=${hocKyId}`,{
+            
+            const response = await APIs.get(`${endpoints['upload_diem_danh']}?hoc_ky=${hocKyId}`,{
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            // console.log(response.data);
+            // console.log(response.data.error);
             const sortedHoatDong = response.data.sort((a, b) => new Date(b.ngay_to_chuc) - new Date(a.ngay_to_chuc));
             setHoatDong(sortedHoatDong);
             setLoading(false);
@@ -86,6 +87,7 @@ const DiemDanh = ({ navigation }) => {
     };
 
     const uploadFile = async () => {
+        const token = await AsyncStorage.getItem('access-token');
         
         if (!file) {
             Alert.alert('Please select a file first');
@@ -100,12 +102,14 @@ const DiemDanh = ({ navigation }) => {
         });
 
         try {
-            // console.log(hoatdongselected);
-            const response = await APIs.post(endpoints['diemdanh'](hoatdongselected), formData, {
+            console.log(formData);
+            const response = await APIs.post(endpoints['diemdanh'](hoatdongselected, hockyselected), formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`
                 },
             });
+            
 
             if (response.status === 201) {
                 Alert.alert('Tải file điểm danh lên hệ thống thành công');

@@ -5,6 +5,7 @@ import { TextInput as PaperTextInput, Button as PaperButton } from "react-native
 import APIs, { endpoints, authAPI } from '../../configs/APIs';
 import { StyleSheet } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { get } from 'firebase/database';
 
 const ChiTietBaoThieu = ({ navigation }) => {
     const route = useRoute();
@@ -107,6 +108,7 @@ const ChiTietBaoThieu = ({ navigation }) => {
             const res = await APIs.patch(`/thamgias/${thamgiabaothieu_id}/`, updatedThamGia);
             if (res.status === 200) {
                 setChiTietBaoThieu(updatedThamGia);
+                
             }
         } catch (error) {
             console.error("Lỗi khi cập nhật trạng thái:", error);
@@ -116,10 +118,19 @@ const ChiTietBaoThieu = ({ navigation }) => {
 
     const updateTrangThaiThanhCong = async () => {
         try {
+            const token = await AsyncStorage.getItem("access-token");
             const updatedThamGia = { ...chiTietBaoThieu, trang_thai: 1 };
             const res = await APIs.patch(`/thamgias/${thamgiabaothieu_id}/`, updatedThamGia);
             if (res.status === 200) {
                 setChiTietBaoThieu(updatedThamGia);
+                const hoat_dong = chiTietBaoThieu.hd_ngoaikhoa
+                const gethk_nh = await APIs.get(`${endpoints['hd']}${hoat_dong}/`);
+                const res = gethk_nh.data;
+                await APIs.post(`${endpoints['tinh_diem']}${chiTietBaoThieu.sinh_vien}/${res.hk_nh}/`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
             }
         } catch (error) {
             console.error("Lỗi khi cập nhật trạng thái:", error);

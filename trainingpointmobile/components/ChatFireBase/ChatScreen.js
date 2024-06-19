@@ -19,15 +19,13 @@ const ChatScreen = ({navigation}) => {
 
   const [user, dispatch, isAuthenticated, setIsAuthenticated, role, setRole] = useContext(MyContext);
 
-
-
   const getroom = async () => {
     const unsubscribe = onSnapshot(collection(db, 'chatRooms'), (snapshot) => {
           let rooms = [];
           snapshot.forEach(doc => {
             const data = doc.data();
-            console.log(data);
-             if (role === 4 && Array.isArray(data.participants) && data.participants.includes(user.id)) {
+            // console.log(data);
+            if (role === 4 && Array.isArray(data.participants) && data.participants.includes(user.id)) {
               rooms.push({ ...data, id: doc.id });
               setChatRooms(rooms);
             }
@@ -68,7 +66,6 @@ const ChatScreen = ({navigation}) => {
         Alert.alert('Error', 'Lỗi khi lấy khoa');
       }
     };
-
     fetchData(); 
 
   }, [role, navigation]);
@@ -88,32 +85,6 @@ const ChatScreen = ({navigation}) => {
     }
   }, [selectedRoom]);
 
-  // const getKhoa = async () => {
-  //   try {
-  //     const token = await AsyncStorage.getItem('access-token');
-  //     const response = await APIs.get(endpoints['get_khoa'], {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       }
-  //     });
-  //     if (response.status === 200) {
-  //       setKhoa(response.data);
-  //       // console.log(response.data);
-  //     }
-  //     if(user.role ==4){
-  //       const svres = await APIs.get(endpoints['current_sinhvien'],{
-  //         headers: {
-  //           Authorization: `Bearer ${token}`
-  //         }
-        
-  //       });
-  //       setSv(svres.data);
-  //     }
-  //   } catch (error) {
-  //     console.error('Lỗi khi lấy khoa:', error);
-  //     Alert.alert('Error', 'Lỗi khi lấy khoa');
-  //   }
-  // }
 
   const createChatRoomForStudent = async () => {
     const token = await AsyncStorage.getItem('access-token');

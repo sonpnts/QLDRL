@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useContext, useState } from "react";
-import { Text, View, TextInput, TouchableOpacity } from "react-native"
+import { Text, View, TextInput, TouchableOpacity, Alert } from "react-native"
 import { TextInput as PaperTextInput, Title, Button as PaperButton } from "react-native-paper";
 import APIs, { endpoints, authAPI } from "../../configs/APIs";
 import MyContext from "../../configs/MyContext";
@@ -35,30 +35,29 @@ const DangNhap = ({ navigation }) => {
                 }
             });
 
-            
-            console.info(res.data)
-
-            await AsyncStorage.setItem('access-token', res.data.access_token)
-
-            let user = await authAPI(res.data.access_token).get(endpoints['current_taikhoan']);
-            dispatch({
-                "type": "login",
-                "payload": user.data
-            });
-            let firebase = await APIs.get(endpoints['firebase'], {
-                headers: {
-                    Authorization: `Bearer ${res.data.access_token}`,
-                  },
-            });
-            
-            await AsyncStorage.setItem('firebase-token', firebase.data.token)
-           
-            // console.log(user.data.role);
-            let user_role = user.data.role;
-            // setUser(user.data);
-            setRole(user_role);
-            // console.log(user_role);
-            setIsAuthenticated(true);
+            if(res.status == 200) {
+                console.info(res.data)
+                await AsyncStorage.setItem('access-token', res.data.access_token)
+                let user = await authAPI(res.data.access_token).get(endpoints['current_taikhoan']);
+                let user_role = user.data.role;
+                // setUser(user.data);
+                setRole(user_role);
+                // console.log(user_role);
+                setIsAuthenticated(true);
+                dispatch({
+                    "type": "login",
+                    "payload": user.data
+                });
+                let firebase = await APIs.get(endpoints['firebase'], {
+                    headers: {
+                        Authorization: `Bearer ${res.data.access_token}`,
+                    },
+                });
+                await AsyncStorage.setItem('firebase-token', firebase.data.token)
+            }
+            else{
+                Alert.alert("Sai tên đăng nhập hoặc mật khẩu");
+            }
 
         } catch (ex) {
             console.error("Lỗi tại màn hình đăng nhập:",ex);
