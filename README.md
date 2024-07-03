@@ -11,16 +11,15 @@
 ## Công Nghệ Sử Dụng
 - **Frontend**: React Native
 - **Backend**: Django REST Framework
-- **Database**: PostgreSQL
-- **Authentication**: JSON Web Tokens (JWT)
+- **Database**: MySQL
+- **Authentication**: Django Outh2
 
 ## Cài Đặt và Sử Dụng
 
 ### Backend (Django API)
 1. Clone repository:
     ```bash
-    git clone https://github.com/username/student-management-app.git
-    cd student-management-app/backend
+    git clone https://github.com/sonpnts/QLDRL.git
     ```
 
 2. Tạo và kích hoạt môi trường ảo:
@@ -35,11 +34,12 @@
     ```
 
 4. Thiết lập cơ sở dữ liệu:
+   Tạo mới cơ sở dữ liệu 
     ```bash
     python manage.py migrate
     ```
 
-5. Chạy server:
+6. Chạy server:
     ```bash
     python manage.py runserver
     ```
