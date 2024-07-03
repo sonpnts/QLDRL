@@ -34,8 +34,9 @@
     ```
 
 4. Thiết lập cơ sở dữ liệu:
-   Tạo mới cơ sở dữ liệu 
+   Tạo mới cơ sở dữ liệu với tên là: trainingpointdb
     ```bash
+    Cập nhật mật khẩu và user name csdl trong file setting.py
     python manage.py migrate
     ```
 
@@ -47,7 +48,7 @@
 ### Frontend (React Native)
 1. Điều hướng đến thư mục frontend:
     ```bash
-    cd ../frontend
+    cd ../trainingpointmobile
     ```
 
 2. Cài đặt các gói cần thiết:
