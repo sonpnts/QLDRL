@@ -12,7 +12,6 @@ const QuanLy = ({ navigation }) => {
   };
 
 
-
   return (
 
     <View style={Styles.containerqly}>
@@ -24,7 +23,7 @@ const QuanLy = ({ navigation }) => {
           <Icon name="account-clock" size={30} color="white" style={Styles.icon} />
           <Text style={Styles.buttonTextQly}>Quản lý hoạt động</Text>
         </TouchableOpacity>
-
+        {role == 3 &&
         <TouchableOpacity
           style={Styles.buttonHomePly}
           onPress={() => navigateToScreen('HoatDong')}
@@ -32,6 +31,8 @@ const QuanLy = ({ navigation }) => {
           <Icon name="account-clock" size={30} color="white" style={Styles.icon} />
           <Text style={Styles.buttonTextQly}>Tạo hoạt động</Text>
         </TouchableOpacity>
+        }
+        {role == 3 &&
         <TouchableOpacity
           style={Styles.buttonHomePly}
           onPress={() => navigateToScreen('HoatDongChuaCoBaiViet')}
@@ -39,7 +40,7 @@ const QuanLy = ({ navigation }) => {
           <Icon name="file-document-edit" size={30} color="white" style={Styles.icon} />
           <Text style={Styles.buttonTextQly}>Tạo bài viết</Text>
         </TouchableOpacity>
-
+        }
         <TouchableOpacity
           style={Styles.buttonHomePly}
           onPress={() => navigateToScreen('DanhSachBaoThieu')}

@@ -101,7 +101,6 @@ class BaiVietViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         return Response(serializers.TaiKhoanSerializer(tacgia).data, status=status.HTTP_200_OK)
 
 
-
 class DieuViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Dieu.objects.filter(active=True)
     serializer_class = serializers.DieuSerializer
@@ -935,7 +934,7 @@ class ExportBaoCaoViewLop(APIView):
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         elements = []
 
-        # Define styles
+
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             'title',
@@ -964,8 +963,7 @@ class ExportBaoCaoViewLop(APIView):
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ])
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # Add header
-        # Add header
+
         header = Paragraph(f"Ngày in: {now}<br/>Mẫu: Báo cáo điểm rèn luyện", header_style)
         elements.append(header)
         elements.append(Spacer(1, 12))
@@ -988,13 +986,11 @@ class ExportBaoCaoViewLop(APIView):
             ])
 
         col_widths = [120, 100, 100, 80, 80]
-        # Create table
+
         table = Table(data_table, colWidths=col_widths)
         table.setStyle(table_style)
         elements.append(table)
 
-
-        # Create a frame to hold the elements
         doc.build(elements)
         file_name = f"bao_cao_diem_ren_luyen_lop_{lop}_khoa_{khoa}.pdf"
         file_name_ascii = unidecode(file_name).lower()
@@ -1099,12 +1095,11 @@ class ExportBaoCaoViewKhoa(APIView):
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Add header
+
         header = Paragraph(f"Ngày in: {now}<br/>Mẫu: Báo cáo điểm rèn luyện", header_style)
         elements.append(header)
         elements.append(Spacer(1, 12))
 
-        # Add title
         title = Paragraph(f"Báo cáo điểm rèn luyện khoa {khoa}<br/>Học kì {hk}", title_style)
         elements.append(title)
         elements.append(Spacer(1, 12))
@@ -1279,8 +1274,6 @@ class BaoCaoChiTietSinhVien(APIView):
 
 
 
-
-
 class BaoCaoViewLop(APIView):
     permission_classes = [RolePermission]
 
@@ -1306,7 +1299,7 @@ class BaoCaoViewKhoa(APIView):
         try:
             khoa = Khoa.objects.get(pk=id_khoa)
             hoc_ky_nam_hoc = HocKy_NamHoc.objects.get(pk=id_hoc_ky)
-            sinh_viens = SinhVien.objects.filter(lop__khoa=khoa)  # Get all students in the department
+            sinh_viens = SinhVien.objects.filter(lop__khoa=khoa)
             diem_ren_luyen = DiemRenLuyen.objects.filter(sinh_vien__in=sinh_viens, hk_nh=hoc_ky_nam_hoc)
             serializer = serializers.BaoCaoSerializer(diem_ren_luyen, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1317,52 +1310,6 @@ class BaoCaoViewKhoa(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# class CalculateDiemRenLuyen(APIView):
-#
-#     permission_classes = [RolePermission]
-#
-#     def post(self, request, sinhvien_id, hk_id):
-#         try:
-#             sinh_vien = SinhVien.objects.get(id=sinhvien_id)
-#             # Lấy tất cả các hoạt động mà sinh viên đã tham gia trong học kỳ đó
-#             hoat_dong_tham_gia = ThamGia.objects.filter(sinh_vien=sinh_vien, hd_ngoaikhoa__hk_nh_id=hk_id, trang_thai=ThamGia.TrangThai.DiemDanh)
-#             # Tính điểm rèn luyện
-#             diem_ren_luyen = 0
-#             dieu_points = {}
-#
-#             for tham_gia in hoat_dong_tham_gia:
-#                 hd_ngoaikhoa = tham_gia.hd_ngoaikhoa
-#                 dieu_id = hd_ngoaikhoa.dieu.id
-#
-#                 if dieu_id not in dieu_points:
-#                     dieu_points[dieu_id] = 0
-#
-#                 dieu_points[dieu_id] += hd_ngoaikhoa.diem_ren_luyen
-#
-#             for dieu_id, points in dieu_points.items():
-#                 try:
-#                     dieu = Dieu.objects.get(id=dieu_id)
-#                     diem_ren_luyen += min(points, dieu.diem_toi_da)
-#                 except ObjectDoesNotExist:
-#                     return Response({'error': f'Dieu với ID {dieu_id} không tồn tại'},
-#                                     status=status.HTTP_400_BAD_REQUEST)
-#
-#             # Lưu điểm rèn luyện vào bảng DiemRenLuyen
-#             diem_ren_luyen_entry, created = DiemRenLuyen.objects.update_or_create(
-#                 sinh_vien=sinh_vien,
-#                 hk_nh_id=hk_id,
-#                 defaults={'diem_tong': diem_ren_luyen}
-#             )
-#
-#             serializer = serializers.DiemRenLuyenSerializer(diem_ren_luyen_entry)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#
-#         except SinhVien.DoesNotExist:
-#             return Response({'error': 'Sinh viên không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
-#
-#         except Exception as e:
-#             print(e)
-#             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class UploadFileDiemDanh(APIView):
     permission_classes = [RolePermission]
@@ -1387,7 +1334,7 @@ class UploadFileDiemDanh(APIView):
                     tham_gia.ngay_diem_danh = timezone.now()
                     tham_gia.save()
 
-                    # CalculateDiemRenLuyen().post(request, sinhvien_id=sinh_vien.id, hk_id=hoatdongnk.hk_nh_id)
+
                     DiemRenLuyenViewset.calculate_diem_ren_luyen(self=self,request=request, id_sinh_vien = sinh_vien.id, id_hoc_ky=hk_id)
                 except ThamGia.DoesNotExist:
                     errors.append(f"Không tìm thấy tham gia với MSSV {mssv} và HK_NH {hoatdongnk.ten_HD_NgoaiKhoa} trong hoạt động ngoại khóa {hd_ngoaikhoa_id}")

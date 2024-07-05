@@ -96,12 +96,12 @@ const DangKy = ({ route, navigation }) => {
         setErrors(newErrors);
         let message = '';
         if (valid) {
-            let tk_valid = false; // Đã có tài khoản
+            let tk_valid = true; // Đã có tài khoản
             try {
                 let check = await APIs.get(`${endpoints['tai_khoan_is_valid']}?email=${user.email}&username=${user.username}`);
                 if (check.status == 200) {
                     const res = check.data.is_valid;
-                    if (res) {
+                    if (res==true) {
                         tk_valid= true;
                         message = check.data.message;
                     }
@@ -111,7 +111,7 @@ const DangKy = ({ route, navigation }) => {
                 Alert.alert('Có lỗi gì đó đã xảy ra', 'Tài khoản sinh viên đã tồn tại!');
             }
 
-            if (!tk_valid) {
+            if (tk_valid == false) {
                 navigation.navigate('OTP', { email: user.email });
             } else {
                 Alert.alert('Có lỗi gì đó xảy ra', 'Tài khoản sinh viên đã tồn tại!');
