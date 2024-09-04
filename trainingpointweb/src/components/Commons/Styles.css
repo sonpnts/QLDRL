@@ -1,0 +1,12 @@
+.bg-body-tertiary1 {
+    --bs-bg-opacity: 1;
+    background-color: rgb(182, 232, 240) !important;
+}
+.navbar-sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1020; 
+    background-color: #f8f9fa; 
+};
+

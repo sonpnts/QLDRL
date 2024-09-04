@@ -1,0 +1,27 @@
+/* Đặt footer luôn nằm ở cuối trang */
+.footer1 {
+    background-color: #296571;
+    color: #ffffff;
+    padding: 20px 0;
+    position: static;
+    bottom: 0%;
+    width: 100%;
+}
+
+/* Đảm bảo rằng body và html có chiều cao đầy đủ để footer nằm ở cuối trang */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* Đảm bảo nội dung trang không bị chồng lên footer */
+.content {
+    flex: 1;
+}
+
+/* Đặt footer nằm ở dưới cùng của trang */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}

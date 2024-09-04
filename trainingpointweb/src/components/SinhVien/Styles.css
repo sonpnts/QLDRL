@@ -1,0 +1,139 @@
+/* Styles.css */
+
+.bg-primary1 {
+    background-color: #ffffff; /* White background */
+    color: #000000; /* Black text */
+}
+
+.text-dark1 {
+    color: #000000; /* Black text */
+}
+
+.bg-primary1 {
+    background-color: #f8f9fa; /* Light gray background for the container */
+    color: #000000; /* Black text */
+}
+
+.table-primary {
+    background-color: #e9ecef; /* Light gray background for table headers */
+    color: #000000; /* Black text */
+}
+
+.table-bordered {
+    border: 1px solid #dee2e6; /* Light gray border for the table */
+}
+
+.table thead th {
+    background-color: #e9ecef; /* Light gray background for table headers */
+    color: #000000; /* Black text */
+}
+
+.table td, .table th {
+    border: 1px solid #dee2e6; /* Light gray border for table cells */
+}
+
+.mt-4 {
+    margin-top: 1.5rem; /* Space above elements */
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem; /* Space below elements */
+}
+
+.p-4 {
+    padding: 1.5rem; /* Padding around elements */
+}
+
+.p-2 {
+    padding: 0.5rem; /* Padding around elements */
+}
+
+.text-center {
+    text-align: center; /* Center-align text */
+}
+
+.text-danger {
+    color: #dc3545; /* Red color for emphasis */
+}
+
+.alert-danger {
+    background-color: #f8d7da; /* Light red background for alerts */
+    color: #721c24; /* Dark red text for alerts */
+}
+
+.custom-title {
+    text-align: center;
+    color: white;
+    background-color: #296571;
+    padding: 15px;
+    border-radius: 5px; 
+}
+
+
+.registration-background {
+    background-image: url('https://images.pexels.com/photos/1029618/pexels-photo-1029618.jpeg');
+    background-size: cover; 
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh; 
+   
+    justify-content: center; 
+    align-items: center; 
+    padding: 20px; 
+    position: relative; 
+    overflow: hidden; 
+  }
+  
+  .registration-background::before {
+    content: ''; 
+    position: absolute; 
+    top: 0;
+    left: 0; 
+    width: 100%;
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.5); 
+    z-index: -1; 
+  }
+  .card1 {
+    border: none;
+    border-radius: 8px;
+    background: #f7f7f7;
+    max-width: 1320px;
+    z-index: 1;
+}
+.card2 {
+    border: none;
+    border-radius: 8px;
+    max-width: 1320px;
+    z-index: 1;
+}
+
+.card3 {
+    border: none;
+    border-radius: 8px;
+    max-width: 1320px;
+    background: #f7f7f7;
+    padding: 12px;
+    height: 720px;
+    z-index: 1;
+}
+.card4 {
+    border: none;
+    border-radius: 8px;
+    max-width: 1320px;
+    background: #f7f7f7;
+    padding: 12px;
+    margin-left: 4%;
+    margin-right: 4%;
+    height: 720px;
+    z-index: 1;
+}
+.card5 {
+    border: none;
+    border-radius: 8px;
+    background: #f7f7f7;
+    margin-left: 4%;
+    margin-right: 4%;
+    max-width: 1320px;
+    z-index: 1;
+}
